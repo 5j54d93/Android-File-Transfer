@@ -34,3 +34,7 @@
 
 /* Misc */
 "storage.generic" = "Storage";
+
+/* ADB storage names */
+"storage.internal" = "Internal Storage";
+"storage.removable" = "Removable Storage";

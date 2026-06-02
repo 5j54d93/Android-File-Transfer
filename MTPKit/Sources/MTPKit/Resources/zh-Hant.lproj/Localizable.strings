@@ -34,3 +34,7 @@
 
 /* Misc */
 "storage.generic" = "儲存空間";
+
+/* ADB storage names */
+"storage.internal" = "內部儲存空間";
+"storage.removable" = "外接儲存空間";

@@ -28,11 +28,20 @@ struct ContentView: View {
             }
             .navigationTitle("Android File Transfer")
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    if deviceManager.wirelessAvailable {
+                        Button {
+                            deviceManager.showPairingSheet = true
+                        } label: {
+                            Image(systemName: "wifi")
+                        }
+                        .help("Pair Wireless Device…")
+                    }
                     if deviceManager.isScanning {
                         ProgressView()
                             .progressViewStyle(.circular)
                             .controlSize(.small)
+                            .frame(width: 28, height: 22)
                             .help("Scanning…")
                     } else {
                         Button {
@@ -63,17 +72,33 @@ struct ContentView: View {
         .task {
             browser.alerts = alerts
             transfers.alerts = alerts
+            // When the browser detects free space changed, refresh the sidebar's figures too.
+            browser.onStorageShouldRefresh = { Task { await deviceManager.refreshStorages() } }
+        }
+        .sheet(isPresented: $deviceManager.showPairingSheet) {
+            PairDeviceView(deviceManager: deviceManager)
         }
     }
 
     @ViewBuilder
     private var emptyState: some View {
-        if deviceManager.devices.isEmpty {
-            ContentUnavailableView(
-                "No Android Device Connected",
-                systemImage: "iphone.slash",
-                description: Text("Connect an Android device via USB and choose \"File Transfer\" mode on the phone.")
-            )
+        if deviceManager.isSearchingWithNoDevices {
+            searchingState
+        } else if deviceManager.devices.isEmpty {
+            ContentUnavailableView {
+                Label("No Android Device Connected", systemImage: "iphone.slash")
+            } description: {
+                Text("Connect an Android device via USB and choose \"File Transfer\" mode on the phone.")
+            } actions: {
+                if deviceManager.wirelessAvailable {
+                    Button {
+                        deviceManager.showPairingSheet = true
+                    } label: {
+                        Label("No cable? Connect over Wi-Fi", systemImage: "wifi")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
         } else if case .device(let id) = deviceManager.selection,
                   let device = deviceManager.device(id: id), device.storages.isEmpty {
             ContentUnavailableView(
@@ -88,6 +113,23 @@ struct ContentView: View {
                 description: Text("Select a storage from the sidebar to browse files.")
             )
         }
+    }
+
+    /// Shown on launch / while scanning with nothing found yet, so the user isn't told
+    /// "no device" before we've actually finished looking.
+    private var searchingState: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .controlSize(.large)
+            Text("Searching for Devices…")
+                .font(.title2.weight(.semibold))
+            Text("Make sure your Android device is connected via USB and unlocked.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 360)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func applySelection(_ selection: SidebarSelection?) {

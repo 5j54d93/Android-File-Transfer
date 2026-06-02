@@ -26,7 +26,11 @@ final class BrowserViewModel {
     @ObservationIgnored private var observeTask: Task<Void, Never>?
     @ObservationIgnored private var observingTransportID: String?
     @ObservationIgnored private var pollTask: Task<Void, Never>?
+    @ObservationIgnored private var storageRefreshTask: Task<Void, Never>?
     @ObservationIgnored var alerts: AppAlerts?
+    /// Called (debounced) when the device's free space likely changed, so the sidebar's
+    /// per-device storage figures can refresh too — not just this view's path-bar gauge.
+    @ObservationIgnored var onStorageShouldRefresh: (() -> Void)?
 
     var currentParentID: String? { pathStack.last?.id }
     var storageID: String? { storage?.id }
@@ -51,12 +55,34 @@ final class BrowserViewModel {
     /// Clear back to the "nothing selected" state so the detail pane shows its placeholder.
     func reset() {
         stopPolling()
+        storageRefreshTask?.cancel()
         transport = nil
         storage = nil
         pathStack = []
         entries = []
         selection = []
         errorMessage = nil
+    }
+
+    /// Re-fetch the current storage's capacity/free figures — they change as files are added
+    /// or removed — so the path-bar gauge reflects the device's real free space.
+    func refreshStorageInfo() async {
+        guard let transport, let storageID else { return }
+        if let updated = try? await transport.storages().first(where: { $0.id == storageID }) {
+            storage = updated
+        }
+    }
+
+    /// Coalesce a burst of change events (e.g. a multi-file transfer or delete) into a single
+    /// storage refresh shortly after they settle.
+    private func scheduleStorageRefresh() {
+        storageRefreshTask?.cancel()
+        storageRefreshTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard let self, !Task.isCancelled else { return }
+            await self.refreshStorageInfo()
+            self.onStorageShouldRefresh?()
+        }
     }
 
     func enter(_ folder: FileNode) {
@@ -173,6 +199,7 @@ final class BrowserViewModel {
         let removed = current.subtracting(ids)
         let added = ids.subtracting(current)
         guard !removed.isEmpty || !added.isEmpty else { return }
+        scheduleStorageRefresh()   // the folder changed → free space likely did too
 
         if !removed.isEmpty {
             entries.removeAll { removed.contains($0.id) }
@@ -191,12 +218,14 @@ final class BrowserViewModel {
     private func apply(_ change: DeviceChange) {
         switch change {
         case .added(let node):
+            scheduleStorageRefresh()   // free space dropped
             guard node.storageID == storageID, node.parentID == currentParentID else { return }
             if !entries.contains(where: { $0.id == node.id }) {
                 entries.append(node)
                 entries.sort(by: Self.order)
             }
         case .removed(let id):
+            scheduleStorageRefresh()   // free space recovered
             entries.removeAll { $0.id == id }
             selection.remove(id)
             // If the current folder (or an ancestor) was deleted, pop above it.
@@ -213,7 +242,7 @@ final class BrowserViewModel {
         case .reloadNeeded(let parentID, let sid):
             if sid == storageID, parentID == currentParentID { Task { await reload() } }
         case .storagesChanged:
-            break
+            scheduleStorageRefresh()
         }
     }
 

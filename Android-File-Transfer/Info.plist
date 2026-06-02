@@ -29,5 +29,12 @@
 		<string>en</string>
 		<string>zh-Hant</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>探索並連接同一 Wi-Fi 網路上的 Android 裝置以進行無線傳輸。</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_adb-tls-connect._tcp</string>
+		<string>_adb-tls-pairing._tcp</string>
+	</array>
 </dict>
 </plist>

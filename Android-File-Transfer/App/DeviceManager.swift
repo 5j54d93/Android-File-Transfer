@@ -32,13 +32,39 @@ final class DeviceManager {
 
     private(set) var devices: [Device] = []
     private(set) var isScanning = false
+    /// True once the first scan completes, so launch shows a "searching" state instead of
+    /// prematurely flashing "no device connected" before we've actually looked.
+    private(set) var hasFinishedFirstScan = false
     var selection: SidebarSelection?
     /// Set when a previously-connected device drops unexpectedly; ContentView surfaces it.
     private(set) var lastError: String?
+    /// Toggled to present the wireless pairing sheet from menu/toolbar.
+    var showPairingSheet = false
+    /// Whether wireless is available at all (adb located/bundled).
+    var wirelessAvailable: Bool { adbClient != nil }
+    /// We're still looking and have nothing to show yet → the UI shows a "searching" state
+    /// rather than the "no device connected" empty state.
+    var isSearchingWithNoDevices: Bool { devices.isEmpty && (isScanning || !hasFinishedFirstScan) }
 
     private var realTransport: MTPTransport?
     private var watcher: USBWatcher?
     private var storagePollTask: Task<Void, Never>?
+
+    // Wireless (ADB) state — see DeviceManager+Wireless.swift.
+    let adbClient: ADBClient? = ADBClient()
+    var adbDiscovery: ADBDiscovery?
+    var wirelessTransports: [String: ADBTransport] = [:]   // keyed by adb serial (host:port)
+    var discoveredServices: [ADBService] = []
+    /// Active QR pairing session (payload shown to the user); nil when not pairing by QR.
+    var qrSession: ADBQRPairing.Session?
+    /// Drives QR pairing: polls mDNS, pairs, then connects. Cancelled when the sheet closes.
+    var qrPollTask: Task<Void, Never>?
+    /// Endpoints connected manually (direct IP:port). Protected from mDNS-driven removal,
+    /// since some devices don't keep advertising _adb-tls-connect after connecting.
+    var manualEndpoints: Set<String> = []
+    /// Set after a successful pair when we couldn't auto-connect (device doesn't advertise
+    /// _adb-tls-connect). Carries the paired host so the UI can prompt for the connect port.
+    var pairedAwaitingConnect: String?
 
     // Serialize refreshes: concurrent runs corrupt each other (one discovers a transport
     // while another, seeing the seize-induced re-enumeration, closes it). `isRefreshing`
@@ -56,6 +82,7 @@ final class DeviceManager {
         watcher = USBWatcher {
             Task { @MainActor [weak self] in self?.scheduleRefresh() }
         }
+        startWirelessDiscovery()
         Task { await refresh() }
     }
 
@@ -69,6 +96,19 @@ final class DeviceManager {
         }
     }
 
+    /// Lightweight refresh of just the connected devices' storage figures (capacity/free),
+    /// without re-running discovery. Lets the sidebar reflect free space changing after a
+    /// transfer or delete.
+    func refreshStorages() async {
+        guard !isRefreshing, !devices.isEmpty else { return }
+        var updated: [Device] = []
+        for device in devices {
+            let storages = (try? await device.transport.storages()) ?? device.storages
+            updated.append(Device(transport: device.transport, storages: storages))
+        }
+        devices = updated
+    }
+
     func refresh() async {
         // Reentrancy guard: if a refresh is in flight, mark that another is wanted and
         // return — the in-flight one will loop again when it finishes.
@@ -78,6 +118,7 @@ final class DeviceManager {
         defer {
             isRefreshing = false
             isScanning = false
+            hasFinishedFirstScan = true
             if refreshPending {
                 refreshPending = false
                 Task { await refresh() }
@@ -128,6 +169,8 @@ final class DeviceManager {
         if let real = realTransport {
             list.append(Device(transport: real, storages: realStorages ?? []))
         }
+        // Merge wireless (ADB) devices, de-duplicating against the USB device (USB wins).
+        list.append(contentsOf: await wirelessDevices(excludingUSBModel: realTransport?.displayName))
         devices = list
 
         let storageIDs = list.flatMap { $0.storages.map(\.id) }
@@ -171,17 +214,24 @@ final class DeviceManager {
     /// Synchronous so it can run from applicationWillTerminate before the process exits.
     func shutdownSync() {
         storagePollTask?.cancel()
-        guard let real = realTransport else { return }
+        adbDiscovery?.stop()
+        let usb = realTransport
+        let wireless = Array(wirelessTransports.values)
+        let adb = adbClient
         realTransport = nil
+        wirelessTransports = [:]
+        guard usb != nil || !wireless.isEmpty else { return }
         let sema = DispatchSemaphore(value: 0)
-        // Run the close at the SAME (high) QoS as this terminating thread. Using a plain
-        // Task.detached would run at default QoS while we block here at user-interactive,
-        // which trips the Thread Performance Checker's priority-inversion warning.
+        // Run closes at the SAME (high) QoS as this terminating thread to avoid a
+        // priority-inversion warning from the Thread Performance Checker.
         Task.detached(priority: .userInitiated) {
-            await real.close()
+            await usb?.close()
+            for w in wireless { await w.close() }
+            // Stop our isolated adb server so we don't leave a stray daemon.
+            _ = try? await adb?.run(["kill-server"], timeout: 5)
             sema.signal()
         }
-        _ = sema.wait(timeout: .now() + 2)
+        _ = sema.wait(timeout: .now() + 3)
     }
 
     func device(id: String) -> Device? {

@@ -43,7 +43,14 @@ struct DeviceSidebarView: View {
         .listStyle(.sidebar)
         .navigationTitle("Devices")
         .overlay {
-            if deviceManager.devices.isEmpty && !deviceManager.isScanning {
+            if deviceManager.isSearchingWithNoDevices {
+                VStack(spacing: 10) {
+                    ProgressView().controlSize(.small)
+                    Text("Searching…")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+            } else if deviceManager.devices.isEmpty {
                 ContentUnavailableView("No devices connected", systemImage: "iphone.slash",
                                        description: Text("Connect an Android device via USB and choose \"File Transfer\" mode."))
             }
