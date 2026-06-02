@@ -19,6 +19,9 @@ struct TransferQueueView: View {
                 if transfers.activeCount > 0 {
                     Text(String(format: NSLocalizedString("%d in progress", comment: ""), transfers.activeCount))
                         .font(.caption)
+                        .monospacedDigit()
+                        .contentTransition(.numericText(value: Double(transfers.activeCount)))
+                        .animation(.default, value: transfers.activeCount)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -67,8 +70,13 @@ private struct TransferRow: View {
                 if item.status == .running || item.status == .waiting {
                     ProgressView(value: item.fraction)
                 }
+                // The live readout (sizes / speed / ETA) reads better monospaced; other
+                // statuses stay proportional but keep tabular digits so figures don't jitter.
                 Text(statusText)
-                    .font(.caption)
+                    .font(item.status == .running ? .caption.monospaced() : .caption)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())   // roll digits as size/speed/ETA change
+                    .animation(.easeInOut(duration: 0.2), value: statusText)
                     .foregroundStyle(isFailed ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
                     .lineLimit(2)
             }
@@ -117,7 +125,7 @@ private struct TransferRow: View {
         case .waiting:
             return NSLocalizedString("Waiting…", comment: "")
         case .running:
-            let progress = "\(Format.size(item.completedBytes)) / \(Format.size(item.totalBytes))"
+            let progress = "\(Format.size(item.completedBytes))／\(Format.size(item.totalBytes))"
             let extras = [Format.speed(item.bytesPerSecond), Format.eta(item.etaSeconds)].compactMap { $0 }
             return extras.isEmpty ? progress : "\(progress) · \(extras.joined(separator: " · "))"
         case .completed:

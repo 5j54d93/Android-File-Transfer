@@ -75,6 +75,15 @@ public actor MTPSession {
         try MTPObjectInfo(parsing: try receiveData(.getObjectInfo, params: [handle]))
     }
 
+    /// The object's true size via the 64-bit ObjectSize property (0xDC04). ObjectInfo's
+    /// ObjectCompressedSize is only 32-bit, so devices pin it to 0xFFFFFFFF for files larger
+    /// than 4 GB — this property carries the real value.
+    public func objectSize(_ handle: UInt32) throws -> UInt64 {
+        var r = ByteReader(try receiveData(.getObjectPropValue,
+                                           params: [handle, UInt32(MTPObjectProperty.objectSize)]))
+        return try r.u64()
+    }
+
     public func getObject(_ handle: UInt32) throws -> Data {
         try receiveData(.getObject, params: [handle])
     }
@@ -82,6 +91,14 @@ public actor MTPSession {
     /// Ranged read for streaming downloads. Returns up to `count` bytes from `offset`.
     public func getPartialObject(_ handle: UInt32, offset: UInt32, count: UInt32) throws -> Data {
         try receiveData(.getPartialObject, params: [handle, offset, count])
+    }
+
+    /// Ranged read with a 64-bit offset (Android extension), needed for files >4 GB whose
+    /// offsets overflow the 32-bit `getPartialObject`. The offset is passed as low/high words.
+    public func getPartialObject64(_ handle: UInt32, offset: UInt64, count: UInt32) throws -> Data {
+        let low = UInt32(offset & 0xFFFFFFFF)
+        let high = UInt32(offset >> 32)
+        return try receiveData(.getPartialObject64, params: [handle, low, high, count])
     }
 
     public func deleteObject(_ handle: UInt32) throws {

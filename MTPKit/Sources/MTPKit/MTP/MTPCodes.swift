@@ -31,6 +31,8 @@ public enum MTPOperation: UInt16, Sendable {
     case getObjectPropValue = 0x9803
     case setObjectPropValue = 0x9804
     case getObjectPropList = 0x9805
+    /// Android (android.com) MTP extension: ranged read with a 64-bit offset, for files >4 GB.
+    case getPartialObject64 = 0x95C1
 }
 
 /// MTP response codes (subset).

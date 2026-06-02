@@ -7,7 +7,6 @@
 
 import SwiftUI
 import MTPKit
-import CoreTransferable
 import UniformTypeIdentifiers
 
 /// The Finder-like detail pane: breadcrumb + multi-column file table + toolbar.
@@ -63,6 +62,10 @@ struct FileBrowserView: View {
             ContentUnavailableView("This Folder Is Empty", systemImage: "folder",
                                    description: Text("Drag files here to upload."))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .contextMenu {
+                    Button("New Folder") { presentNewFolder() }
+                }
         } else {
             fileTable
                 .overlay { if browser.isLoading { ProgressView() } }
@@ -72,29 +75,31 @@ struct FileBrowserView: View {
     private var fileTable: some View {
         Table(browser.entries, selection: $browser.selection) {
             TableColumn("Name") { node in
-                let row = HStack(spacing: 6) {
-                    FileIcon(node: node).frame(width: 18, height: 18)
-                    Text(node.name).lineLimit(1)
-                }
-                // Files are draggable out to Finder (= download); folders are not.
-                if !node.isDirectory, let transport = browser.transport {
-                    row.draggable(FileDrag(node: node, transport: transport))
-                } else {
-                    row
+                draggableCell(node) {
+                    HStack(spacing: 6) {
+                        FileIcon(node: node).frame(width: 18, height: 18)
+                        Text(node.name).lineLimit(1)
+                    }
                 }
             }
             TableColumn("Size") { node in
-                Text(node.isDirectory ? "—" : Format.size(node.size))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                draggableCell(node) {
+                    Text(node.isDirectory ? "—" : Format.size(node.size))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
             }
             .width(min: 70, ideal: 90)
             TableColumn("Kind") { node in
-                Text(Format.kind(for: node)).foregroundStyle(.secondary)
+                draggableCell(node) {
+                    Text(Format.kind(for: node)).foregroundStyle(.secondary)
+                }
             }
             .width(min: 90, ideal: 140)
             TableColumn("Date Modified") { node in
-                Text(Format.date(node.modifiedDate)).foregroundStyle(.secondary)
+                draggableCell(node) {
+                    Text(Format.date(node.modifiedDate)).foregroundStyle(.secondary)
+                }
             }
             .width(min: 120, ideal: 170)
         }
@@ -102,6 +107,17 @@ struct FileBrowserView: View {
             menuItems(for: ids)
         } primaryAction: { ids in
             performPrimaryAction(for: ids)
+        }
+        .background {
+            // Finder convention: Return renames the selected item (not "open"). A default-
+            // action button catches Return via performKeyEquivalent *before* the Table maps
+            // it to primaryAction (which would otherwise download the file). Enabled only for
+            // a single selection so multi/empty selections just fall through harmlessly.
+            Button("", action: renameSelected)
+                .keyboardShortcut(.return, modifiers: [])
+                .opacity(0)
+                .allowsHitTesting(false)
+                .disabled(browser.selection.count != 1)
         }
     }
 
@@ -116,7 +132,7 @@ struct FileBrowserView: View {
             }
         }
         ToolbarItemGroup {
-            Button { newFolderName = String(localized: "untitled folder"); newFolderPresented = true } label: {
+            Button { presentNewFolder() } label: {
                 Image(systemName: "folder.badge.plus")
             }
             .help("New Folder")
@@ -129,8 +145,7 @@ struct FileBrowserView: View {
 
             if !transfers.items.isEmpty {
                 Button { showTransfers.toggle() } label: {
-                    Image(systemName: "arrow.up.arrow.down.circle")
-                        .symbolVariant(transfers.activeCount > 0 ? .fill : .none)
+                    TransfersProgressIcon(transfers: transfers)
                 }
                 .help("Transfers")
                 .popover(isPresented: $showTransfers, arrowEdge: .bottom) {
@@ -145,20 +160,76 @@ struct FileBrowserView: View {
     @ViewBuilder
     private func menuItems(for ids: Set<String>) -> some View {
         let nodes = browser.entries.filter { ids.contains($0.id) }
-        if nodes.count == 1, let node = nodes.first, node.isDirectory {
-            Button("Open") { browser.enter(node) }
-        }
-        let files = nodes.filter { !$0.isDirectory }
-        if !files.isEmpty {
-            Button("Download to Downloads") { download(nodes: files) }
-        }
-        if nodes.count == 1, let node = nodes.first {
-            Button("Rename…") { renameName = node.name; renameTarget = node }
-        }
-        if !nodes.isEmpty {
+        if nodes.isEmpty {
+            // Right-clicked empty space → folder-level actions, like Finder.
+            Button("New Folder") { presentNewFolder() }
+        } else {
+            if nodes.count == 1, let node = nodes.first, node.isDirectory {
+                Button("Open") { browser.enter(node) }
+            }
+            let files = nodes.filter { !$0.isDirectory }
+            if !files.isEmpty {
+                Button("Download to Downloads") { download(nodes: files) }
+            }
+            if nodes.count == 1, let node = nodes.first {
+                Button("Rename…") { renameName = node.name; renameTarget = node }
+            }
             Divider()
             Button("Delete", role: .destructive) { browser.delete(Set(nodes.map(\.id))) }
         }
+    }
+
+    private func presentNewFolder() {
+        newFolderName = String(localized: "untitled folder")
+        newFolderPresented = true
+    }
+
+    /// Wraps a cell's content so the *entire* cell — across every column — is a file-promise
+    /// drag source for file rows, making the whole row draggable out to Finder. The content
+    /// is stretched to fill the cell so there are no dead zones, and the overlay forwards
+    /// plain clicks/double-clicks back so Table selection keeps working. Folder rows keep the
+    /// Table's native click behaviour (no overlay).
+    @ViewBuilder
+    private func draggableCell<Content: View>(_ node: FileNode,
+                                              @ViewBuilder content: () -> Content) -> some View {
+        if !node.isDirectory, let transport = browser.transport {
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(
+                    FilePromiseDragView(
+                        node: node, transport: transport, transfers: transfers,
+                        onClick: { extend in
+                            if extend {
+                                if browser.selection.contains(node.id) { browser.selection.remove(node.id) }
+                                else { browser.selection.insert(node.id) }
+                            } else {
+                                browser.selection = [node.id]
+                            }
+                        },
+                        onDoubleClick: { performPrimaryAction(for: [node.id]) },
+                        nodesToDrag: {
+                            // Grabbing a row that's part of the selection drags all selected
+                            // files; grabbing an unselected row drags just that one.
+                            if browser.selection.contains(node.id) {
+                                let ids = browser.selection
+                                let selected = browser.entries.filter { ids.contains($0.id) && !$0.isDirectory }
+                                return selected.isEmpty ? [node] : selected
+                            }
+                            return [node]
+                        }
+                    )
+                )
+        } else {
+            content()
+        }
+    }
+
+    /// Open the rename sheet for the single selected item (triggered by the Return key).
+    private func renameSelected() {
+        guard browser.selection.count == 1, let id = browser.selection.first,
+              let node = browser.entries.first(where: { $0.id == id }) else { return }
+        renameName = node.name
+        renameTarget = node
     }
 
     private func performPrimaryAction(for ids: Set<String>) {
@@ -189,20 +260,29 @@ struct FileBrowserView: View {
     }
 }
 
-/// A device file made draggable to Finder. The export handler streams the file from the
-/// device into a temp location on demand, so dropping it into Finder downloads it there.
-struct FileDrag: Transferable {
-    let node: FileNode
-    let transport: any DeviceTransport
+/// Toolbar transfers icon: up/down arrows ringed by a circular progress bar that fills as the
+/// in-flight transfers complete. When the queue is idle/finished the ring is a plain outline.
+private struct TransfersProgressIcon: View {
+    let transfers: TransferManager
 
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(exportedContentType: .data) { drag in
-            let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            let url = dir.appendingPathComponent(drag.node.name)
-            try await drag.transport.download(drag.node.id, to: url) { _ in }
-            return SentTransferredFile(url)
+    var body: some View {
+        let active = transfers.activeCount > 0
+        ZStack {
+            if active {
+                Circle().stroke(.tertiary, lineWidth: 2).padding(1)
+                Circle()
+                    .trim(from: 0, to: max(0.03, transfers.overallProgress))
+                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .rotationEffect(.degrees(-90))   // start the arc at 12 o'clock
+                    .padding(1)
+                    .animation(.linear(duration: 0.2), value: transfers.overallProgress)
+            } else {
+                Circle().stroke(.secondary, lineWidth: 1.5).padding(1)
+            }
+            Image(systemName: "arrow.up.arrow.down")
+                .font(.system(size: 8, weight: .semibold))
         }
+        .frame(width: 18, height: 18)
     }
 }
 

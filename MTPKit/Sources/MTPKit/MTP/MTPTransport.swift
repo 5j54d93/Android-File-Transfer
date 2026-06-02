@@ -122,14 +122,24 @@ public final class MTPTransport: DeviceTransport, @unchecked Sendable {
         nodes.reserveCapacity(handles.count)
         for handle in handles {
             let info = try await session.objectInfo(handle)
-            nodes.append(Self.node(from: info, handle: handle))
+            nodes.append(Self.node(from: info, handle: handle, sizeOverride: await accurateSize(handle, info)))
         }
         return nodes
     }
 
     public func metadata(for id: String) async throws -> FileNode {
         guard let handle = UInt32(id) else { throw TransportError.notFound(id: id) }
-        return Self.node(from: try await session.objectInfo(handle), handle: handle)
+        let info = try await session.objectInfo(handle)
+        return Self.node(from: info, handle: handle, sizeOverride: await accurateSize(handle, info))
+    }
+
+    /// Correct size for files larger than 4 GB: ObjectInfo's ObjectCompressedSize is a 32-bit
+    /// field the device pins to 0xFFFFFFFF once the real size exceeds it, so fall back to the
+    /// 64-bit ObjectSize property in that case.
+    private func accurateSize(_ handle: UInt32, _ info: MTPObjectInfo) async -> Int64 {
+        guard info.compressedSize == 0xFFFFFFFF else { return Int64(info.compressedSize) }
+        if let size = try? await session.objectSize(handle) { return Int64(clamping: size) }
+        return Int64(info.compressedSize)
     }
 
     /// One MTP transaction (GetObjectHandles) — much cheaper than a full listing, for polling.
@@ -143,24 +153,29 @@ public final class MTPTransport: DeviceTransport, @unchecked Sendable {
     public func download(_ id: String, to destinationURL: URL, progress: @escaping ProgressHandler) async throws {
         guard let handle = UInt32(id) else { throw TransportError.notFound(id: id) }
         let info = try await session.objectInfo(handle)
-        let total = info.compressedSize
+        let total = await accurateSize(handle, info)   // 64-bit; correct for files >4 GB
         FileManager.default.createFile(atPath: destinationURL.path, contents: nil)
         let fileHandle = try FileHandle(forWritingTo: destinationURL)
         defer { try? fileHandle.close() }
 
-        progress(TransferProgress(fileName: info.filename, completedBytes: 0, totalBytes: Int64(total)))
+        progress(TransferProgress(fileName: info.filename, completedBytes: 0, totalBytes: total))
         guard total > 0 else { return }
 
-        var offset: UInt32 = 0
-        let chunkSize: UInt32 = 4 << 20 // 4 MB — fewer USB round trips => higher throughput
+        // 32-bit offsets overflow past 4 GB, so switch to GetPartialObject64 for large files.
+        // Smaller files keep the universally-supported 32-bit op.
+        let needs64 = total > Int64(UInt32.max)
+        var offset: Int64 = 0
+        let chunkSize: Int64 = 4 << 20 // 4 MB — fewer USB round trips => higher throughput
         while offset < total {
             try Task.checkCancellation()
-            let want = min(chunkSize, total - offset)
-            let part = try await session.getPartialObject(handle, offset: offset, count: want)
+            let want = UInt32(min(chunkSize, total - offset))
+            let part = needs64
+                ? try await session.getPartialObject64(handle, offset: UInt64(offset), count: want)
+                : try await session.getPartialObject(handle, offset: UInt32(offset), count: want)
             if part.isEmpty { break }
             try fileHandle.write(contentsOf: part)
-            offset &+= UInt32(part.count)
-            progress(TransferProgress(fileName: info.filename, completedBytes: Int64(offset), totalBytes: Int64(total)))
+            offset += Int64(part.count)
+            progress(TransferProgress(fileName: info.filename, completedBytes: offset, totalBytes: total))
         }
     }
 
@@ -228,7 +243,7 @@ public final class MTPTransport: DeviceTransport, @unchecked Sendable {
 
     // MARK: Mapping
 
-    static func node(from info: MTPObjectInfo, handle: UInt32) -> FileNode {
+    static func node(from info: MTPObjectInfo, handle: UInt32, sizeOverride: Int64? = nil) -> FileNode {
         let isRoot = info.parentObject == 0 || info.parentObject == mtpRootParentHandle
         let ext: String? = info.isDirectory ? nil : {
             let e = (info.filename as NSString).pathExtension.lowercased()
@@ -240,7 +255,7 @@ public final class MTPTransport: DeviceTransport, @unchecked Sendable {
             parentID: isRoot ? nil : String(info.parentObject),
             name: info.filename,
             isDirectory: info.isDirectory,
-            size: Int64(info.compressedSize),
+            size: sizeOverride ?? Int64(info.compressedSize),
             modifiedDate: info.dateModified,
             fileExtension: ext
         )

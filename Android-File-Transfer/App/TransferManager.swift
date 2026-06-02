@@ -20,6 +20,7 @@ final class TransferManager {
     /// Everything needed to (re)start a transfer, so failed items can be retried.
     enum Job {
         case download(node: FileNode, folder: URL)
+        case downloadToURL(node: FileNode, destination: URL)   // drag-out: exact target URL
         case upload(localURL: URL, parentID: String?, storageID: String)
     }
 
@@ -37,6 +38,9 @@ final class TransferManager {
         @ObservationIgnored var startedAt: Date?
         @ObservationIgnored var lastSampleTime: Date?
         @ObservationIgnored var lastSampleBytes: Int64 = 0
+        /// Called on completion (success → nil, failure → error). Used by drag-out file
+        /// promises to signal Finder when the destination file is ready.
+        @ObservationIgnored var completion: (@Sendable (Error?) -> Void)?
 
         init(name: String, direction: Direction, totalBytes: Int64, job: Job) {
             self.name = name
@@ -66,6 +70,16 @@ final class TransferManager {
     var activeCount: Int { items.filter { $0.status == .running || $0.status == .waiting }.count }
     var hasFinished: Bool { items.contains { $0.status != .running && $0.status != .waiting } }
 
+    /// Aggregate progress (0–1) across all in-flight transfers (running + waiting), by bytes.
+    /// Drives the toolbar's progress ring around the transfers icon.
+    var overallProgress: Double {
+        let active = items.filter { $0.status == .running || $0.status == .waiting }
+        let total = active.reduce(Int64(0)) { $0 + $1.totalBytes }
+        guard total > 0 else { return 0 }
+        let done = active.reduce(Int64(0)) { $0 + $1.completedBytes }
+        return min(1, Double(done) / Double(total))
+    }
+
     /// The transport is set by the browser whenever it opens a storage.
     func bind(_ transport: any DeviceTransport) { self.transport = transport }
 
@@ -75,6 +89,17 @@ final class TransferManager {
         self.transport = transport
         let item = Item(name: node.name, direction: .download, totalBytes: node.size,
                         job: .download(node: node, folder: folder))
+        enqueue(item)
+    }
+
+    /// Download a node to an exact destination URL, calling `completion` when done. Used by
+    /// drag-out file promises (Finder hands us the destination; we fulfil it in background).
+    func downloadToURL(_ node: FileNode, from transport: any DeviceTransport, to destination: URL,
+                       completion: @escaping @Sendable (Error?) -> Void) {
+        self.transport = transport
+        let item = Item(name: node.name, direction: .download, totalBytes: node.size,
+                        job: .downloadToURL(node: node, destination: destination))
+        item.completion = completion
         enqueue(item)
     }
 
@@ -135,14 +160,18 @@ final class TransferManager {
             switch item.job {
             case .download(let node, let folder):
                 try await transport.download(node.id, to: folder.appendingPathComponent(node.name), progress: onProgress)
+            case .downloadToURL(let node, let destination):
+                try await transport.download(node.id, to: destination, progress: onProgress)
             case .upload(let localURL, let parentID, let storageID):
                 try await transport.upload(localURL: localURL, as: localURL.lastPathComponent,
                                            toParent: parentID, in: storageID, progress: onProgress)
             }
             item.status = .completed
             item.bytesPerSecond = 0
+            item.completion?(nil)
         } catch is CancellationError {
             item.status = .cancelled
+            item.completion?(CancellationError())
         } catch {
             let message = error.friendlyMessage
             item.status = .failed(message)
@@ -150,6 +179,7 @@ final class TransferManager {
                 ? NSLocalizedString("Download", comment: "")
                 : NSLocalizedString("Upload", comment: "")
             alerts?.error(String(format: NSLocalizedString("%@ \"%@\" failed: %@", comment: ""), verb, item.name, message))
+            item.completion?(error)
         }
     }
 
