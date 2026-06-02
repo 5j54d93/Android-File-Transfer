@@ -1,114 +1,35 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Tools": {
+    "": {},
+    "%@ \"%@\" failed: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tools"
+            "value": "%@ \"%@\" failed: %@"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "工具"
+            "value": "%@「%@」失敗：%@"
           }
         }
       }
     },
-    "USB Diagnostics…": {
+    "%@ File": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "USB Diagnostics…"
+            "value": "%@ File"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "USB 診斷…"
-          }
-        }
-      }
-    },
-    "About Android File Transfer": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "About Android File Transfer"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "關於 Android 檔案傳輸"
-          }
-        }
-      }
-    },
-    "USB Diagnostics": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "USB Diagnostics"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "USB 診斷"
-          }
-        }
-      }
-    },
-    "Android File Transfer": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Android File Transfer"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Android 檔案傳輸"
-          }
-        }
-      }
-    },
-    "Devices": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Devices"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "裝置"
-          }
-        }
-      }
-    },
-    "File transfer is off": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "File transfer is off"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未開啟檔案傳輸"
+            "value": "%@ 檔案"
           }
         }
       }
@@ -129,82 +50,226 @@
         }
       }
     },
-    "Refresh": {
+    "%d in progress": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refresh"
+            "value": "%d in progress"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "重新整理"
+            "value": "%d 進行中"
           }
         }
       }
     },
-    "Scanning…": {
+    "about %dh": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scanning…"
+            "value": "about %dh"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "掃描中…"
+            "value": "約 %d 小時"
           }
         }
       }
     },
-    "No devices connected": {
+    "about %dm": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No devices connected"
+            "value": "about %dm"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "尚未連接裝置"
+            "value": "約 %d 分"
           }
         }
       }
     },
-    "Connect an Android device via USB and choose \"File Transfer\" mode.": {
+    "about %ds": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect an Android device via USB and choose \"File Transfer\" mode."
+            "value": "about %ds"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "透過 USB 連接 Android 裝置並選擇「檔案傳輸」模式"
+            "value": "約 %d 秒"
           }
         }
       }
     },
-    "No Android Device Connected": {
+    "About Android File Transfer": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Android Device Connected"
+            "value": "About Android File Transfer"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "未連接 Android 裝置"
+            "value": "關於 Android 檔案傳輸"
+          }
+        }
+      }
+    },
+    "Already paired this device once? Just connect — no code needed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already paired this device once? Just connect — no code needed."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這台裝置之前配對過嗎？直接連線即可，不需配對碼。"
+          }
+        }
+      }
+    },
+    "Android File Transfer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android File Transfer"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Android 檔案傳輸"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回上一層"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
+          }
+        }
+      }
+    },
+    "Cancelled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消"
+          }
+        }
+      }
+    },
+    "Clear Finished": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Finished"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除已完成"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉"
+          }
+        }
+      }
+    },
+    "Completed · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed · %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已完成 · %@"
+          }
+        }
+      }
+    },
+    "Connect": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連線"
           }
         }
       }
@@ -225,34 +290,959 @@
         }
       }
     },
-    "Turn On File Transfer on Your Phone": {
+    "Connect an Android device via USB and choose \"File Transfer\" mode.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn On File Transfer on Your Phone"
+            "value": "Connect an Android device via USB and choose \"File Transfer\" mode."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "請在手機開啟檔案傳輸"
+            "value": "透過 USB 連接 Android 裝置並選擇「檔案傳輸」模式"
           }
         }
       }
     },
-    "Unlock \"%@\", then set the USB option to \"File Transfer\" in the notification shade.": {
+    "Connecting…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unlock \"%@\", then set the USB option to \"File Transfer\" in the notification shade."
+            "value": "Connecting…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "解鎖「%@」，下拉通知列把 USB 用途設為「檔案傳輸」"
+            "value": "連線中…"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製"
+          }
+        }
+      }
+    },
+    "Copy the report above to share USB device details for troubleshooting.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy the report above to share USB device details for troubleshooting."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製上方報告以分享 USB 裝置資訊，便於排除問題。"
+          }
+        }
+      }
+    },
+    "Couldn't connect. Make sure Wireless debugging is on and the address is correct.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't connect. Make sure Wireless debugging is on and the address is correct."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法連線。請確認無線偵錯已開啟且位址正確。"
+          }
+        }
+      }
+    },
+    "Create": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建立"
+          }
+        }
+      }
+    },
+    "Date Modified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date Modified"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改日期"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刪除"
+          }
+        }
+      }
+    },
+    "Delete failed: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete failed: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刪除失敗：%@"
+          }
+        }
+      }
+    },
+    "Delete Selected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Selected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刪除所選"
+          }
+        }
+      }
+    },
+    "Detected a device ready to pair — the address is filled in below.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detected a device ready to pair — the address is filled in below."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已偵測到可配對的裝置——下方位址已自動填入。"
+          }
+        }
+      }
+    },
+    "Develop & Design by Ricky.": {
+      "comment": "A line of text that credits the developer of the app.",
+      "isCommentAutoGenerated": true
+    },
+    "Devices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devices"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裝置"
+          }
+        }
+      }
+    },
+    "Document": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件"
+          }
+        }
+      }
+    },
+    "Download": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下載"
+          }
+        }
+      }
+    },
+    "Download to Downloads": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download to Downloads"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下載到「下載」資料夾"
+          }
+        }
+      }
+    },
+    "Drag files here to upload.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag files here to upload."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "將檔案拖進來即可上傳"
+          }
+        }
+      }
+    },
+    "Enable Developer options: open Settings ▸ About phone and tap \"Build number\" 7 times.": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Developer options: open Settings ▸ About phone and tap \"Build number\" 7 times."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用開發者選項：開啟「設定 ▸ 關於手機」，連點「組建號碼」7 次。"
+          }
+        }
+      }
+    },
+    "Enter the \"IP address & Port\" shown on that screen (not the pairing dialog).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the \"IP address & Port\" shown on that screen (not the pairing dialog)."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "輸入該畫面上顯示的「IP 位址與連接埠」（不是配對彈窗的那個）。"
+          }
+        }
+      }
+    },
+    "Enter the IP address & port and the 6-digit code shown on the phone.": {
+      "comment": "A step in the process of pairing a wireless device.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the IP address & port and the 6-digit code shown on the phone."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "輸入手機上顯示的 IP 位址與連接埠，以及 6 位數配對碼。"
+          }
+        }
+      }
+    },
+    "Failed to create folder: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to create folder: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建立資料夾失敗：%@"
+          }
+        }
+      }
+    },
+    "Failed to read folder: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to read folder: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "讀取資料夾失敗：%@"
+          }
+        }
+      }
+    },
+    "Failed: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失敗：%@"
+          }
+        }
+      }
+    },
+    "File transfer is off": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File transfer is off"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未開啟檔案傳輸"
+          }
+        }
+      }
+    },
+    "Folder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "資料夾"
+          }
+        }
+      }
+    },
+    "IP address": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP address"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP 位址"
+          }
+        }
+      }
+    },
+    "IP address & port": {
+      "comment": "A label for the IP address and port to pair with.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP address & port"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IP 位址與連接埠"
+          }
+        }
+      }
+    },
+    "Keep the phone on the same Wi-Fi network as this Mac.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the phone on the same Wi-Fi network as this Mac."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "讓手機與這台 Mac 保持在同一個 Wi-Fi 網路。"
+          }
+        }
+      }
+    },
+    "Kind": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "種類"
+          }
+        }
+      }
+    },
+    "Lost connection to the Android device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lost connection to the Android device"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "與 Android 裝置的連線中斷了"
+          }
+        }
+      }
+    },
+    "Make sure the phone and this Mac are on the same Wi-Fi network.": {
+      "comment": "A description of the Wi-Fi network requirement for pairing.",
+      "extractionState": "stale",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make sure the phone and this Mac are on the same Wi-Fi network."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認手機與這台 Mac 連到同一個 Wi-Fi 網路。"
+          }
+        }
+      }
+    },
+    "Make sure your Android device is connected via USB and unlocked.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make sure your Android device is connected via USB and unlocked."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請確認 Android 裝置已透過 USB 連接並已解鎖。"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名稱"
+          }
+        }
+      }
+    },
+    "New Folder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Folder"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增資料夾"
+          }
+        }
+      }
+    },
+    "New Name": {
+      "comment": "Label for the text field in the rename sheet.",
+      "isCommentAutoGenerated": true
+    },
+    "No active transfers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active transfers"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有進行中的傳輸"
+          }
+        }
+      }
+    },
+    "No Android Device Connected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Android Device Connected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未連接 Android 裝置"
+          }
+        }
+      }
+    },
+    "No devices connected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No devices connected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未連接裝置"
+          }
+        }
+      }
+    },
+    "On the phone: Settings ▸ System ▸ Developer options ▸ Wireless debugging.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the phone: Settings ▸ System ▸ Developer options ▸ Wireless debugging."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在手機上：設定 ▸ 系統 ▸ 開發者選項 ▸ 無線偵錯。"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打開"
+          }
+        }
+      }
+    },
+    "Open Settings ▸ System ▸ Developer options ▸ Wireless debugging, turn it on, then tap \"Pair device with pairing code\".": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings ▸ System ▸ Developer options ▸ Wireless debugging, turn it on, then tap \"Pair device with pairing code\"."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟「設定 ▸ 系統 ▸ 開發者選項 ▸ 無線偵錯」並啟用，再點「使用配對碼配對裝置」。"
+          }
+        }
+      }
+    },
+    "Pair": {
+      "comment": "A button that pairs a device.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配對"
+          }
+        }
+      }
+    },
+    "Pair a Wireless Device": {
+      "comment": "A title for the screen that guides the user through pairing a wireless device.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair a Wireless Device"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配對無線裝置"
+          }
+        }
+      }
+    },
+    "Pair Wireless Device…": {
+      "comment": "A button that opens a sheet to pair a wireless device.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair Wireless Device…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配對無線裝置…"
+          }
+        }
+      }
+    },
+    "Paired! Now enter the \"IP address & Port\" from the phone's Wireless debugging screen to connect.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paired! Now enter the \"IP address & Port\" from the phone's Wireless debugging screen to connect."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已配對！現在輸入手機無線偵錯畫面上的「IP 位址與連接埠」即可連線。"
+          }
+        }
+      }
+    },
+    "Pairing code": {
+      "comment": "A label for the 6-digit code shown on the phone.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pairing code"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配對碼"
+          }
+        }
+      }
+    },
+    "Pairing Code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pairing Code"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配對碼"
+          }
+        }
+      }
+    },
+    "Pairing failed. Check the address and code, then try again.": {
+      "comment": "A message displayed when pairing a device fails.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pairing failed. Check the address and code, then try again."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配對失敗，請確認位址與配對碼後再試一次。"
+          }
+        }
+      }
+    },
+    "Pairing…": {
+      "comment": "A button that is disabled while pairing a device.",
+      "isCommentAutoGenerated": true,
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pairing…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配對中…"
+          }
+        }
+      }
+    },
+    "Port": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新整理"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新命名"
+          }
+        }
+      }
+    },
+    "Rename failed: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename failed: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新命名失敗：%@"
+          }
+        }
+      }
+    },
+    "Rename…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新命名…"
+          }
+        }
+      }
+    },
+    "Rescan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rescan"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新掃描"
+          }
+        }
+      }
+    },
+    "Retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重試"
+          }
+        }
+      }
+    },
+    "Scan QR Code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan QR Code"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "掃描 QR code"
+          }
+        }
+      }
+    },
+    "Scanning…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "掃描中…"
+          }
+        }
+      }
+    },
+    "Searching for Devices…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching for Devices…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在尋找裝置…"
+          }
+        }
+      }
+    },
+    "Searching…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searching…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尋找中…"
           }
         }
       }
@@ -289,22 +1279,6 @@
         }
       }
     },
-    "Name": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "名稱"
-          }
-        }
-      }
-    },
     "Size": {
       "localizations": {
         "en": {
@@ -321,34 +1295,34 @@
         }
       }
     },
-    "Kind": {
+    "Tap \"Pair device with pairing code\".": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kind"
+            "value": "Tap \"Pair device with pairing code\"."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "種類"
+            "value": "點「使用配對碼配對裝置」。"
           }
         }
       }
     },
-    "Date Modified": {
+    "Tap \"Pair device with QR code\", then scan this code.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Date Modified"
+            "value": "Tap \"Pair device with QR code\", then scan this code."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "修改日期"
+            "value": "點「使用 QR code 配對裝置」，然後掃描這個 QR code。"
           }
         }
       }
@@ -369,66 +1343,18 @@
         }
       }
     },
-    "Drag files here to upload.": {
+    "Tools": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Drag files here to upload."
+            "value": "Tools"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "將檔案拖進來即可上傳"
-          }
-        }
-      }
-    },
-    "Back": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "返回上一層"
-          }
-        }
-      }
-    },
-    "New Folder": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New Folder"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新增資料夾"
-          }
-        }
-      }
-    },
-    "Delete Selected": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete Selected"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "刪除所選"
+            "value": "工具"
           }
         }
       }
@@ -449,66 +1375,34 @@
         }
       }
     },
-    "Open": {
+    "Turn On File Transfer on Your Phone": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open"
+            "value": "Turn On File Transfer on Your Phone"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "打開"
+            "value": "請在手機開啟檔案傳輸"
           }
         }
       }
     },
-    "Download to Downloads": {
+    "Unlock \"%@\", then set the USB option to \"File Transfer\" in the notification shade.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Download to Downloads"
+            "value": "Unlock \"%@\", then set the USB option to \"File Transfer\" in the notification shade."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "下載到「下載」資料夾"
-          }
-        }
-      }
-    },
-    "Rename…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rename…"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重新命名…"
-          }
-        }
-      }
-    },
-    "Delete": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "刪除"
+            "value": "解鎖「%@」，下拉通知列把 USB 用途設為「檔案傳輸」"
           }
         }
       }
@@ -529,114 +1423,83 @@
         }
       }
     },
-    "Create": {
+    "Upload": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create"
+            "value": "Upload"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "建立"
+            "value": "上傳"
           }
         }
       }
     },
-    "Cancel": {
+    "USB Diagnostics": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancel"
+            "value": "USB Diagnostics"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "取消"
+            "value": "USB 診斷"
           }
         }
       }
     },
-    "Rename": {
+    "USB Diagnostics…": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rename"
+            "value": "USB Diagnostics…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "重新命名"
+            "value": "USB 診斷…"
           }
         }
       }
     },
-    "%d in progress": {
+    "Used %d%% · Free %d%%": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d in progress"
+            "value": "Used %d%% · Free %d%%"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d 進行中"
+            "value": "已使用 %d%%・剩餘 %d%%"
           }
         }
       }
     },
-    "Clear Finished": {
+    "Waiting for the phone to scan…": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clear Finished"
+            "value": "Waiting for the phone to scan…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "清除已完成"
-          }
-        }
-      }
-    },
-    "No active transfers": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No active transfers"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "沒有進行中的傳輸"
-          }
-        }
-      }
-    },
-    "Retry": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retry"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重試"
+            "value": "等待手機掃描…"
           }
         }
       }
@@ -657,326 +1520,38 @@
         }
       }
     },
-    "Completed · %@": {
+    "No cable? Connect over Wi-Fi": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Completed · %@"
+            "value": "No cable? Connect over Wi-Fi"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "已完成 · %@"
+            "value": "沒有傳輸線？用 Wi-Fi 連接"
           }
         }
       }
     },
-    "Cancelled": {
+    "On the phone, open Settings ▸ About phone and tap \"Build number\" 7 times to enable Developer options.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancelled"
+            "value": "On the phone, open Settings ▸ About phone and tap \"Build number\" 7 times to enable Developer options."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "已取消"
-          }
-        }
-      }
-    },
-    "Failed: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Failed: %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "失敗：%@"
-          }
-        }
-      }
-    },
-    "Download": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Download"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "下載"
-          }
-        }
-      }
-    },
-    "Upload": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Upload"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "上傳"
-          }
-        }
-      }
-    },
-    "Folder": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Folder"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "資料夾"
-          }
-        }
-      }
-    },
-    "Document": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Document"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文件"
-          }
-        }
-      }
-    },
-    "%@ File": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ File"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 檔案"
-          }
-        }
-      }
-    },
-    "about %ds": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "about %ds"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "約 %d 秒"
-          }
-        }
-      }
-    },
-    "about %dm": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "about %dm"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "約 %d 分"
-          }
-        }
-      }
-    },
-    "about %dh": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "about %dh"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "約 %d 小時"
-          }
-        }
-      }
-    },
-    "Failed to read folder: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Failed to read folder: %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "讀取資料夾失敗：%@"
-          }
-        }
-      }
-    },
-    "Delete failed: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete failed: %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "刪除失敗：%@"
-          }
-        }
-      }
-    },
-    "Failed to create folder: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Failed to create folder: %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "建立資料夾失敗：%@"
-          }
-        }
-      }
-    },
-    "Rename failed: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rename failed: %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重新命名失敗：%@"
-          }
-        }
-      }
-    },
-    "%@ \"%@\" failed: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ \"%@\" failed: %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@「%@」失敗：%@"
-          }
-        }
-      }
-    },
-    "Lost connection to the Android device": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lost connection to the Android device"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "與 Android 裝置的連線中斷了"
-          }
-        }
-      }
-    },
-    "Rescan": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rescan"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重新掃描"
-          }
-        }
-      }
-    },
-    "Copy": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "複製"
-          }
-        }
-      }
-    },
-    "Copy the report above to share USB device details for troubleshooting.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy the report above to share USB device details for troubleshooting."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "複製上方報告以分享 USB 裝置資訊，便於排除問題。"
+            "value": "在手機上：設定 ▸ 關於手機，連點「版本號碼」7 次以啟用開發者選項。"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version": "1.1"
 }
