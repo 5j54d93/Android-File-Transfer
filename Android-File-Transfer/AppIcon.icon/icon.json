@@ -2,55 +2,20 @@
   "fill" : "automatic",
   "groups" : [
     {
+      "blur-material" : null,
       "layers" : [
         {
-          "fill-specializations" : [
-            {
-              "value" : {
-                "solid" : "display-p3:0.44360,0.85059,0.54932,1.00000"
-              }
-            },
-            {
-              "appearance" : "tinted",
-              "value" : {
-                "solid" : "srgb:0.12984,0.12985,0.12984,1.00000"
-              }
-            }
-          ],
+          "fill" : {
+            "solid" : "display-p3:0.44434,0.84912,0.54932,1.00000"
+          },
           "glass" : false,
-          "image-name" : "android 2.svg",
-          "name" : "android",
+          "image-name" : "adb.svg",
+          "name" : "adb",
           "position" : {
-            "scale" : 9.5,
+            "scale" : 29,
             "translation-in-points" : [
-              -220,
-              100
-            ]
-          }
-        },
-        {
-          "fill-specializations" : [
-            {
-              "appearance" : "dark",
-              "value" : {
-                "solid" : "srgb:1.00000,1.00000,1.00000,1.00000"
-              }
-            },
-            {
-              "appearance" : "tinted",
-              "value" : {
-                "solid" : "srgb:0.57415,0.57416,0.57415,1.00000"
-              }
-            }
-          ],
-          "glass" : false,
-          "image-name" : "externaldrive.fill.badge.svg",
-          "name" : "externaldrive.fill.badge",
-          "position" : {
-            "scale" : 20,
-            "translation-in-points" : [
-              40,
-              -10
+              0,
+              0
             ]
           }
         }
