@@ -111,7 +111,7 @@
 			mainGroup = 9CDB3EB52FC9CB9F004682D5;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				AAAA0001AAAA0001AAAA0001 /* XCLocalSwiftPackageReference "MTPKit" */,
+				AAAA0001AAAA0001AAAA0001 /* XCRemoteSwiftPackageReference "MTPKit" */,
 			);
 			preferredProjectObjectVersion = 100;
 			productRefGroup = 9CDB3EBF2FC9CB9F004682D5 /* Products */;
@@ -353,16 +353,21 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		AAAA0001AAAA0001AAAA0001 /* XCLocalSwiftPackageReference "MTPKit" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = MTPKit;
+/* Begin XCRemoteSwiftPackageReference section */
+		AAAA0001AAAA0001AAAA0001 /* XCRemoteSwiftPackageReference "MTPKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/5j54d93/MTPKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		AAAA0002AAAA0002AAAA0002 /* MTPKit */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = AAAA0001AAAA0001AAAA0001 /* XCRemoteSwiftPackageReference "MTPKit" */;
 			productName = MTPKit;
 		};
 /* End XCSwiftPackageProductDependency section */
