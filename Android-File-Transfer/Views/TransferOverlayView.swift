@@ -16,20 +16,26 @@ struct TransferOverlayView: View {
 
     var body: some View {
         ZStack {
-            // A light scrim: dims and lightly frosts the app so the card is the focus, but the
-            // file list stays visible underneath. Still swallows clicks so nothing behind can be
-            // touched mid-transfer.
+            // A light scrim: dims the app so the card is the focus, but the file list stays
+            // visible underneath, and still swallows clicks so nothing behind can be touched
+            // mid-transfer. Deliberately a plain translucent colour, NOT `.ultraThinMaterial`:
+            // a full-window material is a live backdrop blur, and animating it in/out forces the
+            // whole window (the file table) to re-render every frame — which caused a ~2s
+            // main-thread hang when navigating right after a transfer finished.
             Rectangle()
-                .fill(.ultraThinMaterial)
-                .opacity(0.55)
+                .fill(Color.black.opacity(0.18))
                 .ignoresSafeArea()
 
-            // The progress panel itself is the floating element, so it uses macOS 26 Liquid
-            // Glass (the material designed for floating controls) rather than a flat material.
+            // Solid panel — deliberately NOT `.glassEffect` (Liquid Glass). The paused main-thread
+            // stack during the hang showed CA::Transaction::commit blocked in
+            // RB::SharedSurfaceGroup::wait_for_allocations: the Liquid Glass backdrop kept churning
+            // GPU shared surfaces, so the *next* CoreAnimation commit (the file-table re-render
+            // right after a transfer) stalled ~1s waiting for surface allocation. A flat fill
+            // needs no off-screen surface, so the commit no longer blocks.
             card
                 .frame(width: 400)
                 .padding(28)
-                .glassEffect(in: .rect(cornerRadius: 16))
+                .background(.background, in: .rect(cornerRadius: 16))
                 .shadow(color: .black.opacity(0.2), radius: 24, y: 8)
         }
     }
