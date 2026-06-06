@@ -5,7 +5,7 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/5j54d93/Android-File-Transfer)
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 
-A macOS app built with SwiftUI to browse Android devices and move files both ways over USB (MTP) and Wi-Fi (ADB) — a fast, Finder-like replacement for Google's discontinued Android File Transfer.
+A fast, native macOS app for transferring files between your Mac and Android device over USB（MTP）or Wi-Fi（ADB）：a Finder-like, open-source replacement for Google's discontinued Android File Transfer. Built with SwiftUI.
 
 <img src="https://github.com/5j54d93/Android-File-Transfer/blob/main/.github/Assets/main.png" width='100%' height='100%'/>
 
@@ -20,12 +20,12 @@ A macOS app built with SwiftUI to browse Android devices and move files both way
 
 ## Browse
 
-A Finder-style source list of devices and storages on the left, and a multi-column file table (Name / Size / Kind / Date Modified) with a clickable breadcrumb path bar on the right.
+A Finder-style source list of devices and storages on the left, and a multi-column file table（Name／Size／Kind／Date Modified）with a clickable breadcrumb path bar on the right.
 
 - **Live sync**：the list updates the instant a file is added or removed on the device — no refresh, no reopen.
 - **Instant navigation**：folders you've already opened reopen instantly from cache — no loading spinner — while refreshing in the background to stay current.
-- **Storage gauge**：the path bar shows used / free percentage plus the free space available, turning orange then red as the device fills up.
-- **Finder conventions**：double-click to open a folder, <kbd>Return</kbd> to rename, right-click empty space for **New Folder**, and create / rename / delete inline.
+- **Storage gauge**：the path bar shows used／free percentage plus the free space available, turning orange then red as the device fills up.
+- **Finder conventions**：double-click to open a folder, <kbd>Return</kbd> to rename, right-click empty space for **New Folder**, and create／rename／delete inline.
 
 <img src="https://github.com/5j54d93/Android-File-Transfer/blob/main/.github/Assets/browse.png" width='100%' height='100%'/>
 
@@ -52,8 +52,8 @@ No cable? Pair once and browse the device wirelessly — `adb` is bundled, so th
 
 ## Under the Hood
 
-- **[MTPKit](https://github.com/5j54d93/MTPKit)**：a standalone, dependency-free Swift package that speaks the MTP protocol directly over `IOUSBHost` (no `libmtp`), alongside an ADB-over-Wi-Fi transport — both behind one shared `DeviceTransport` abstraction. The app pulls it in via Swift Package Manager.
-- **SwiftUI + Observation**：`@Observable` view models throughout, with `async`/`await` and actors serializing all USB / ADB I/O.
+- **[MTPKit](https://github.com/5j54d93/MTPKit)**：a standalone, dependency-free Swift package that speaks the MTP protocol directly over `IOUSBHost`（no `libmtp`）, alongside an ADB-over-Wi-Fi transport — both behind one shared `DeviceTransport` abstraction. The app pulls it in via Swift Package Manager.
+- **SwiftUI + Observation**：`@Observable` view models throughout, with `async`／`await` and actors serializing all USB／ADB I/O.
 - **Localized**：English and 繁體中文 via String Catalogs.
 - **Zero third-party dependencies**：QR codes via Core Image, discovery via the Network framework, USB via `IOUSBHost`.
 
