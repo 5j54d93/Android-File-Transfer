@@ -23,7 +23,8 @@ A macOS app built with SwiftUI to browse Android devices and move files both way
 A Finder-style source list of devices and storages on the left, and a multi-column file table (Name / Size / Kind / Date Modified) with a clickable breadcrumb path bar on the right.
 
 - **Live sync**：the list updates the instant a file is added or removed on the device — no refresh, no reopen.
-- **Storage gauge**：the path bar shows used / free percentage, turning orange then red as the device fills up.
+- **Instant navigation**：folders you've already opened reopen instantly from cache — no loading spinner — while refreshing in the background to stay current.
+- **Storage gauge**：the path bar shows used / free percentage plus the free space available, turning orange then red as the device fills up.
 - **Finder conventions**：double-click to open a folder, <kbd>Return</kbd> to rename, right-click empty space for **New Folder**, and create / rename / delete inline.
 
 <img src="https://github.com/5j54d93/Android-File-Transfer/blob/main/.github/Assets/browse.png" width='100%' height='100%'/>
@@ -34,7 +35,7 @@ Drag files from Finder onto the window to upload, and drag files out to Finder t
 
 - **File promises**：dragging a file out completes the gesture instantly and downloads in the background to wherever you drop it, instead of freezing while the whole file copies.
 - **Multi-file drag**：select several files and drag them all out at once.
-- **Transfer queue**：a live progress ring on the toolbar, with per-item speed, ETA, cancel, and retry-on-failure.
+- **Full-window progress**：transfers cover the window with a frosted-glass overlay and a centered card — current file, overall progress, speed, and ETA — that clears itself the moment everything finishes, with retry-on-failure if a transfer fails.
 - **Large files**：handles files larger than 4 GB in both directions.
 
 <img src="https://github.com/5j54d93/Android-File-Transfer/blob/main/.github/Assets/transfer.gif" width='100%' height='100%'/>
@@ -51,7 +52,7 @@ No cable? Pair once and browse the device wirelessly — `adb` is bundled, so th
 
 ## Under the Hood
 
-- **MTPKit**：a dependency-free Swift package that speaks the MTP protocol directly over `IOUSBHost` (no `libmtp`), alongside an ADB-over-Wi-Fi transport — both behind one shared `DeviceTransport` abstraction.
+- **[MTPKit](https://github.com/5j54d93/MTPKit)**：a standalone, dependency-free Swift package that speaks the MTP protocol directly over `IOUSBHost` (no `libmtp`), alongside an ADB-over-Wi-Fi transport — both behind one shared `DeviceTransport` abstraction. The app pulls it in via Swift Package Manager.
 - **SwiftUI + Observation**：`@Observable` view models throughout, with `async`/`await` and actors serializing all USB / ADB I/O.
 - **Localized**：English and 繁體中文 via String Catalogs.
 - **Zero third-party dependencies**：QR codes via Core Image, discovery via the Network framework, USB via `IOUSBHost`.
