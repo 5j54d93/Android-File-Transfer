@@ -112,6 +112,10 @@ final class BrowserViewModel {
     func refreshStorageAfterTransferBatch() {
         storageRefreshTask?.cancel()
         storageRefreshTask = Task { [weak self] in
+            // Brief grace period: if the user navigates right after a transfer, their folder
+            // listing should reach the serial device first instead of queuing behind this
+            // multi-transaction storage refresh.
+            try? await Task.sleep(for: .milliseconds(800))
             guard let self, !Task.isCancelled, !self.isTransferActive() else { return }
             await self.refreshStorageInfo()
             self.onStorageShouldRefresh?()
