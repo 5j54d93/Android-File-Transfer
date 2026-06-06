@@ -68,14 +68,15 @@ private struct StorageUsageLabel: View {
     }
 
     var body: some View {
-        let usedPct = Int((usedFraction * 100).rounded())
+        let usedPct = usedFraction.formatted(.percent.precision(.fractionLength(0)))
+        let freePct = (1 - usedFraction).formatted(.percent.precision(.fractionLength(0)))
         HStack(spacing: 8) {
             ZStack(alignment: .leading) {
                 Capsule().fill(.quaternary).frame(width: 90, height: 6)
                 Capsule().fill(barColor).frame(width: 90 * CGFloat(usedFraction), height: 6)
             }
-            Text(String(format: NSLocalizedString("Used %d%% · Free %d%% (%@ available)", comment: ""),
-                        usedPct, 100 - usedPct, Format.size(storage.freeBytes)))
+            Text(String(format: NSLocalizedString("Used %@ · Free %@（%@ available）", comment: ""),
+                        usedPct, freePct, Format.size(storage.freeBytes)))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()

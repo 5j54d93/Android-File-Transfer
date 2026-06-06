@@ -254,8 +254,15 @@ struct FileBrowserView: View {
     private func handleDrop(_ urls: [URL]) {
         guard let transport = browser.transport, let storageID = browser.storageID else { return }
         for url in urls where !url.hasDirectoryPath {
-            transfers.upload(url, toParent: browser.currentParentID, storage: storageID, via: transport)
+            transfers.upload(url, toParent: browser.currentParentID, storage: storageID,
+                             destinationFolder: destinationFolderLabel, via: transport)
         }
+    }
+
+    private var destinationFolderLabel: String? {
+        guard let storageName = browser.storage?.name else { return nil }
+        let folders = browser.pathStack.map(\.name)
+        return ([storageName] + folders).joined(separator: " / ")
     }
 }
 

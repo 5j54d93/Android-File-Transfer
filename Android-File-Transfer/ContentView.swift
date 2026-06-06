@@ -71,8 +71,16 @@ struct ContentView: View {
                 deviceManager.clearError()
             }
         }
+        .onChange(of: transfers.activeCount) { oldValue, newValue in
+            if newValue > 0 {
+                browser.cancelPendingStorageRefresh()
+            } else if oldValue > 0 {
+                browser.refreshStorageAfterTransferBatch()
+            }
+        }
         .task {
             browser.alerts = alerts
+            browser.isTransferActive = { transfers.activeCount > 0 }
             transfers.alerts = alerts
             // When the browser detects free space changed, refresh the sidebar's figures too.
             browser.onStorageShouldRefresh = { Task { await deviceManager.refreshStorages() } }

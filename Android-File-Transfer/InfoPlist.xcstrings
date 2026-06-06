@@ -1,57 +1,57 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "CFBundleDisplayName": {
-      "comment": "App display name shown in Dock, menu bar, and Finder",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Android 檔案傳輸"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "App display name shown in Dock, menu bar, and Finder",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android File Transfer"
           }
         },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Android 檔案傳輸"
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android 檔案傳輸"
           }
         }
       }
     },
-    "CFBundleName": {
-      "comment": "Short app name",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Android 檔案傳輸"
+    "CFBundleName" : {
+      "comment" : "Short app name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android File Transfer"
           }
         },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Android 檔案傳輸"
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android 檔案傳輸"
           }
         }
       }
     },
-    "NSLocalNetworkUsageDescription": {
-      "comment": "Local network permission prompt for wireless ADB discovery",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Discover and connect to Android devices on the same Wi-Fi network for wireless transfer."
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Local network permission prompt for wireless ADB discovery",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discover and connect to Android devices on the same Wi-Fi network for wireless transfer."
           }
         },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "探索並連接同一 Wi-Fi 網路上的 Android 裝置以進行無線傳輸。"
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "探索並連接同一 Wi-Fi 網路上的 Android 裝置以進行無線傳輸。"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

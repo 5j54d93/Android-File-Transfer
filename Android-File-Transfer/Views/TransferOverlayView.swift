@@ -48,15 +48,18 @@ struct TransferOverlayView: View {
     // MARK: Progress
 
     private var progressCard: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 0) {
             Image(systemName: directionIcon)
                 .font(.system(size: 34, weight: .regular))
                 .foregroundStyle(.tint)
                 .symbolEffect(.pulse)
+                .padding(.bottom, 10)
 
-            VStack(spacing: 6) {
-                Text("Transferring…")
-                    .font(.headline)
+            Text("Transferring…")
+                .font(.headline)
+                .padding(.bottom, 12)
+
+            VStack(spacing: 4) {
                 if let name = transfers.currentItem?.name {
                     Text(name)
                         .font(.subheadline)
@@ -64,26 +67,41 @@ struct TransferOverlayView: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
+                if let destination = destinationFolderText {
+                    Label {
+                        Text(destination)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    } icon: {
+                        Image(systemName: "folder")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .help(destination)
+                }
             }
+            .padding(.bottom, 22)
 
-            VStack(spacing: 10) {
-                ProgressView(value: transfers.batchProgress)
-
-                // Only show the count/speed/ETA line when there's something to show, so an
-                // empty line doesn't pad the card out before a speed estimate exists.
-                if transfers.batchTotal > 1 || !detailText.isEmpty {
+            VStack(spacing: 0) {
+                // Keep the count/speed/ETA close to the progress bar; hide only during the
+                // brief successful fade-out when the batch has already cleared.
+                if shouldShowTransferStats {
                     HStack {
-                        if transfers.batchTotal > 1 {
-                            Text("\(transfers.batchCompleted) / \(transfers.batchTotal)")
+                        Text("\(transfers.batchCompleted) / \(transfers.batchTotal)")
+                            .contentTransition(.numericText())
+                        Spacer(minLength: 8)
+                        if !detailText.isEmpty {
+                            Text(detailText)
+                                .contentTransition(.numericText(countsDown: true))
                         }
-                        Spacer()
-                        Text(detailText)
                     }
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
-                    .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.2), value: detailText)
+                    .padding(.bottom, 2)
                 }
+
+                ProgressView(value: transfers.batchProgress)
 
                 Button { transfers.cancelAll() } label: {
                     Text("Cancel")
@@ -91,7 +109,7 @@ struct TransferOverlayView: View {
                         .padding(.vertical, 4)
                 }
                 .controlSize(.large)
-                .padding(.top, 2)
+                .padding(.top, 12)
             }
         }
     }
@@ -100,6 +118,15 @@ struct TransferOverlayView: View {
     private var directionIcon: String {
         guard let direction = transfers.currentItem?.direction else { return "arrow.up.arrow.down.circle" }
         return direction == .download ? "arrow.down.circle" : "arrow.up.circle"
+    }
+
+    private var destinationFolderText: String? {
+        let text = transfers.currentItem?.destinationFolder?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text?.isEmpty == false ? text : nil
+    }
+
+    private var shouldShowTransferStats: Bool {
+        transfers.batchTotal > 0
     }
 
     /// Speed · ETA for the current item, e.g. "2.4 MB/s · about 12s".
