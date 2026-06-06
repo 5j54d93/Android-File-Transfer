@@ -15,7 +15,6 @@ struct FileBrowserView: View {
     @Bindable var browser: BrowserViewModel
     @Bindable var transfers: TransferManager
 
-    @State private var showTransfers = false
     @State private var newFolderPresented = false
     @State private var newFolderName = String(localized: "untitled folder")
     @State private var renameTarget: FileNode?
@@ -30,18 +29,11 @@ struct FileBrowserView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .toolbar { toolbarContent }
+        // Drag files from Finder anywhere onto the window to upload them to the current folder.
         .dropDestination(for: URL.self) { urls, _ in
             handleDrop(urls)
             return !urls.isEmpty
         } isTargeted: { isDropTargeted = $0 }
-        .overlay {
-            if isDropTargeted {
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 3, dash: [8]))
-                    .padding(6)
-                    .allowsHitTesting(false)
-            }
-        }
         .sheet(isPresented: $newFolderPresented) {
             NameSheet(title: "New Folder", label: "Name", text: $newFolderName, confirmTitle: "Create") {
                 browser.createFolder(named: newFolderName)
@@ -59,13 +51,26 @@ struct FileBrowserView: View {
     @ViewBuilder
     private var content: some View {
         if browser.entries.isEmpty && !browser.isLoading {
-            ContentUnavailableView("This Folder Is Empty", systemImage: "folder",
-                                   description: Text("Drag files here to upload."))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
-                .contextMenu {
-                    Button("New Folder") { presentNewFolder() }
+            // While a drag hovers an empty folder, the icon opens up (a receiving tray) and
+            // tints, like spring-loaded folders in Finder.
+            ContentUnavailableView {
+                Label {
+                    Text("This Folder Is Empty")
+                } icon: {
+                    Image(systemName: isDropTargeted ? "tray.and.arrow.down.fill" : "folder")
+                        .foregroundStyle(isDropTargeted ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+                        .scaleEffect(isDropTargeted ? 1.12 : 1)
+                        .contentTransition(.symbolEffect(.replace))
                 }
+            } description: {
+                Text(isDropTargeted ? "Release to upload here" : "Drag files here to upload.")
+            }
+            .animation(.spring(duration: 0.25), value: isDropTargeted)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .contextMenu {
+                Button("New Folder") { presentNewFolder() }
+            }
         } else {
             fileTable
                 .overlay { if browser.isLoading { ProgressView() } }
@@ -129,6 +134,7 @@ struct FileBrowserView: View {
             ToolbarItem(placement: .navigation) {
                 Button { browser.goUp() } label: { Image(systemName: "chevron.backward") }
                     .help("Back")
+                    .disabled(transfers.isPresenting)
             }
         }
         ToolbarItemGroup {
@@ -136,22 +142,13 @@ struct FileBrowserView: View {
                 Image(systemName: "folder.badge.plus")
             }
             .help("New Folder")
+            .disabled(transfers.isPresenting)
 
             Button(role: .destructive) { browser.delete(browser.selection) } label: {
                 Image(systemName: "trash")
             }
-            .disabled(browser.selection.isEmpty)
+            .disabled(browser.selection.isEmpty || transfers.isPresenting)
             .help("Delete Selected")
-
-            if !transfers.items.isEmpty {
-                Button { showTransfers.toggle() } label: {
-                    TransfersProgressIcon(transfers: transfers)
-                }
-                .help("Transfers")
-                .popover(isPresented: $showTransfers, arrowEdge: .bottom) {
-                    TransferQueueView(transfers: transfers)
-                }
-            }
         }
     }
 
@@ -198,14 +195,7 @@ struct FileBrowserView: View {
                 .overlay(
                     FilePromiseDragView(
                         node: node, transport: transport, transfers: transfers,
-                        onClick: { extend in
-                            if extend {
-                                if browser.selection.contains(node.id) { browser.selection.remove(node.id) }
-                                else { browser.selection.insert(node.id) }
-                            } else {
-                                browser.selection = [node.id]
-                            }
-                        },
+                        onClick: { selectNode(node, extend: $0) },
                         onDoubleClick: { performPrimaryAction(for: [node.id]) },
                         nodesToDrag: {
                             // Grabbing a row that's part of the selection drags all selected
@@ -221,6 +211,17 @@ struct FileBrowserView: View {
                 )
         } else {
             content()
+        }
+    }
+
+    /// Update the Table selection for a click on `node`; `extend` (command/shift) toggles it
+    /// in/out of a multi-selection, otherwise it becomes the sole selection.
+    private func selectNode(_ node: FileNode, extend: Bool) {
+        if extend {
+            if browser.selection.contains(node.id) { browser.selection.remove(node.id) }
+            else { browser.selection.insert(node.id) }
+        } else {
+            browser.selection = [node.id]
         }
     }
 
@@ -248,7 +249,6 @@ struct FileBrowserView: View {
         for node in nodes {
             transfers.download(node, from: transport, to: downloads)
         }
-        showTransfers = true
     }
 
     private func handleDrop(_ urls: [URL]) {
@@ -256,33 +256,6 @@ struct FileBrowserView: View {
         for url in urls where !url.hasDirectoryPath {
             transfers.upload(url, toParent: browser.currentParentID, storage: storageID, via: transport)
         }
-        if !urls.isEmpty { showTransfers = true }
-    }
-}
-
-/// Toolbar transfers icon: up/down arrows ringed by a circular progress bar that fills as the
-/// in-flight transfers complete. When the queue is idle/finished the ring is a plain outline.
-private struct TransfersProgressIcon: View {
-    let transfers: TransferManager
-
-    var body: some View {
-        let active = transfers.activeCount > 0
-        ZStack {
-            if active {
-                Circle().stroke(.tertiary, lineWidth: 2).padding(1)
-                Circle()
-                    .trim(from: 0, to: max(0.03, transfers.overallProgress))
-                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                    .rotationEffect(.degrees(-90))   // start the arc at 12 o'clock
-                    .padding(1)
-                    .animation(.linear(duration: 0.2), value: transfers.overallProgress)
-            } else {
-                Circle().stroke(.secondary, lineWidth: 1.5).padding(1)
-            }
-            Image(systemName: "arrow.up.arrow.down")
-                .font(.system(size: 8, weight: .semibold))
-        }
-        .frame(width: 18, height: 18)
     }
 }
 

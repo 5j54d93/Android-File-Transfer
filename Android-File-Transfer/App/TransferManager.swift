@@ -68,15 +68,37 @@ final class TransferManager {
     private var isRunning = false
 
     var activeCount: Int { items.filter { $0.status == .running || $0.status == .waiting }.count }
-    var hasFinished: Bool { items.contains { $0.status != .running && $0.status != .waiting } }
 
-    /// Aggregate progress (0–1) across all in-flight transfers (running + waiting), by bytes.
-    /// Drives the toolbar's progress ring around the transfers icon.
-    var overallProgress: Double {
-        let active = items.filter { $0.status == .running || $0.status == .waiting }
-        let total = active.reduce(Int64(0)) { $0 + $1.totalBytes }
+    /// Whether the full-window transfer overlay should show: something is in flight, or a
+    /// finished batch left failures the user still needs to act on.
+    var isPresenting: Bool { activeCount > 0 || hasFailures }
+
+    var failedItems: [Item] {
+        items.filter { item in
+            if case .failed = item.status { return true }
+            return false
+        }
+    }
+    var hasFailures: Bool { !failedItems.isEmpty }
+
+    /// The item currently transferring. MTP is serial, so there's at most one.
+    var currentItem: Item? { items.first { $0.status == .running } }
+
+    /// The current batch is everything not cancelled; `enqueue` clears the previous batch
+    /// when a new one starts, so these stay scoped to the in-flight group.
+    private var batchItems: [Item] { items.filter { $0.status != .cancelled } }
+    var batchTotal: Int { batchItems.count }
+    var batchCompleted: Int { batchItems.filter { $0.status == .completed }.count }
+
+    /// Byte-weighted progress (0–1) across the batch: completed items count as full, the
+    /// rest by bytes transferred so far. Drives the overlay's aggregate progress bar.
+    var batchProgress: Double {
+        let batch = batchItems
+        let total = batch.reduce(Int64(0)) { $0 + $1.totalBytes }
         guard total > 0 else { return 0 }
-        let done = active.reduce(Int64(0)) { $0 + $1.completedBytes }
+        let done = batch.reduce(Int64(0)) { acc, item in
+            item.status == .completed ? acc + item.totalBytes : acc + item.completedBytes
+        }
         return min(1, Double(done) / Double(total))
     }
 
@@ -123,7 +145,15 @@ final class TransferManager {
         pump()
     }
 
+    /// Retry every failed item at once (the overlay's "Retry All").
+    func retryAll() {
+        for item in failedItems { retry(item) }
+    }
+
     private func enqueue(_ item: Item) {
+        // A drop made while nothing is in flight begins a fresh batch — clear the previous
+        // batch's finished/failed rows first so the count and overlay start clean.
+        if activeCount == 0 { clearFinished() }
         items.insert(item, at: 0)
         queue.append(item)
         pump()
@@ -202,6 +232,13 @@ final class TransferManager {
         item.task?.cancel()
         queue.removeAll { $0.id == item.id }
         if item.status == .waiting { item.status = .cancelled }
+    }
+
+    /// Cancel everything in flight at once (the overlay's "Cancel").
+    func cancelAll() {
+        for item in items where item.status == .running || item.status == .waiting {
+            cancel(item)
+        }
     }
 
     func clearFinished() {

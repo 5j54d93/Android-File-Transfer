@@ -36,6 +36,7 @@ struct ContentView: View {
                             Image(systemName: "wifi")
                         }
                         .help("Pair Wireless Device…")
+                        .disabled(transfers.isPresenting)
                     }
                     if deviceManager.isScanning {
                         ProgressView()
@@ -50,6 +51,7 @@ struct ContentView: View {
                             Image(systemName: "arrow.clockwise")
                         }
                         .help("Refresh")
+                        .disabled(transfers.isPresenting)
                     }
                 }
             }
@@ -78,6 +80,15 @@ struct ContentView: View {
         .sheet(isPresented: $deviceManager.showPairingSheet) {
             PairDeviceView(deviceManager: deviceManager)
         }
+        // Frosted-glass transfer overlay over the whole window; fades out the instant the
+        // batch finishes (or stays to show failures).
+        .overlay {
+            if transfers.isPresenting {
+                TransferOverlayView(transfers: transfers)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: transfers.isPresenting)
     }
 
     @ViewBuilder
