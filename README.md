@@ -27,8 +27,6 @@ A Finder-style source list of devices and storages on the left, and a multi-colu
 - **Storage gauge**：the path bar shows used／free percentage plus the free space available, turning orange then red as the device fills up.
 - **Finder conventions**：double-click to open a folder, <kbd>Return</kbd> to rename, right-click empty space for **New Folder**, and create／rename／delete inline.
 
-<img src="https://github.com/5j54d93/Android-File-Transfer/blob/main/.github/Assets/browse.png" width='100%' height='100%'/>
-
 ## Transfer Files
 
 Drag files from Finder onto the window to upload, and drag files out to Finder to download — both directions stream in the background.
