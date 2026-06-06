@@ -190,6 +190,20 @@ final class TransferManager {
         }
     }
 
+    /// Awaits a detached transport task while forwarding cancellation, so `cancel()` still aborts
+    /// the transfer. Transfers run in a *detached* task because a transport's blocking USB I/O
+    /// otherwise executes on the calling `@MainActor` thread (under the macOS 26 SDK, nonisolated
+    /// `async` calls run on the caller's executor) and freezes the UI for the whole transfer — a
+    /// 2.5s upload becomes a 2.5s frozen window.
+    @discardableResult
+    private func awaitForwardingCancellation<T: Sendable>(_ task: Task<T, Error>) async throws -> T {
+        try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
     private func run(_ item: Item, on transport: any DeviceTransport) async {
         let onProgress: ProgressHandler = { progress in
             Task { @MainActor [weak item] in
@@ -202,12 +216,19 @@ final class TransferManager {
         do {
             switch item.job {
             case .download(let node, let folder):
-                try await transport.download(node.id, to: folder.appendingPathComponent(node.name), progress: onProgress)
+                let destination = folder.appendingPathComponent(node.name)
+                try await awaitForwardingCancellation(Task.detached(priority: .userInitiated) {
+                    try await transport.download(node.id, to: destination, progress: onProgress)
+                })
             case .downloadToURL(let node, let destination):
-                try await transport.download(node.id, to: destination, progress: onProgress)
+                try await awaitForwardingCancellation(Task.detached(priority: .userInitiated) {
+                    try await transport.download(node.id, to: destination, progress: onProgress)
+                })
             case .upload(let localURL, let parentID, let storageID):
-                try await transport.upload(localURL: localURL, as: localURL.lastPathComponent,
-                                           toParent: parentID, in: storageID, progress: onProgress)
+                try await awaitForwardingCancellation(Task.detached(priority: .userInitiated) {
+                    try await transport.upload(localURL: localURL, as: localURL.lastPathComponent,
+                                               toParent: parentID, in: storageID, progress: onProgress)
+                })
             }
             item.status = .completed
             item.bytesPerSecond = 0
