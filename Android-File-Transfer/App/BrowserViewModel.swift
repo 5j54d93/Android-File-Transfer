@@ -27,6 +27,13 @@ final class BrowserViewModel {
     @ObservationIgnored private var observingTransportID: String?
     @ObservationIgnored private var pollTask: Task<Void, Never>?
     @ObservationIgnored private var storageRefreshTask: Task<Void, Never>?
+    /// Cached directory listings (key: "storageID/parentID") so navigating back to a folder
+    /// we've already seen is instant — no spinner. A silent re-fetch still runs to catch any
+    /// device-side changes. Cleared when the storage changes.
+    @ObservationIgnored private var listingCache: [String: [FileNode]] = [:]
+    /// True while `reload()` is fetching, so the 3s poll doesn't reconcile against a folder
+    /// that's mid-load (covers both spinner loads and silent cached re-fetches).
+    @ObservationIgnored private var isReloading = false
     @ObservationIgnored var alerts: AppAlerts?
     /// Called (debounced) when the device's free space likely changed, so the sidebar's
     /// per-device storage figures can refresh too — not just this view's path-bar gauge.
@@ -44,6 +51,7 @@ final class BrowserViewModel {
         self.storage = storage
         pathStack = []
         selection = []
+        listingCache = [:]
         if observingTransportID != transport.id {
             startObserving(transport)
             observingTransportID = transport.id
@@ -62,6 +70,7 @@ final class BrowserViewModel {
         entries = []
         selection = []
         errorMessage = nil
+        listingCache = [:]
     }
 
     /// Re-fetch the current storage's capacity/free figures — they change as files are added
@@ -87,6 +96,7 @@ final class BrowserViewModel {
 
     func enter(_ folder: FileNode) {
         guard folder.isDirectory else { return }
+        cacheCurrentListing()
         pathStack.append(folder)
         selection = []
         Task { await reload() }
@@ -94,6 +104,7 @@ final class BrowserViewModel {
 
     func goUp() {
         guard canGoUp else { return }
+        cacheCurrentListing()
         pathStack.removeLast()
         selection = []
         Task { await reload() }
@@ -102,23 +113,53 @@ final class BrowserViewModel {
     /// Breadcrumb jump. `depth == 0` is the storage root; `depth == k` keeps the first k folders.
     func navigate(toDepth depth: Int) {
         guard depth < pathStack.count else { return }
+        cacheCurrentListing()
         pathStack.removeLast(pathStack.count - depth)
         selection = []
         Task { await reload() }
     }
 
+    private func cacheKey(_ parentID: String?, in storageID: String) -> String {
+        "\(storageID)/\(parentID ?? "")"
+    }
+
+    /// Snapshot the current folder's listing into the cache before navigating away, so coming
+    /// back shows it instantly — with whatever live updates it accumulated while it was shown.
+    private func cacheCurrentListing() {
+        guard let storageID else { return }
+        listingCache[cacheKey(currentParentID, in: storageID)] = entries
+    }
+
     func reload() async {
         guard let transport, let storageID else { return }
-        isLoading = true
+        let parent = currentParentID
+        let key = cacheKey(parent, in: storageID)
+        // Seen this folder already? Show it instantly and skip the spinner; we still re-fetch
+        // below (silently) to pick up any device-side changes.
+        if let cached = listingCache[key] {
+            entries = cached
+        } else {
+            isLoading = true
+        }
+        isReloading = true
         errorMessage = nil
         do {
-            let listed = try await transport.listChildren(of: currentParentID, in: storageID)
-            entries = listed.sorted(by: Self.order)
+            let listed = try await transport.listChildren(of: parent, in: storageID)
+            // The user may have navigated elsewhere while this was in flight.
+            guard parent == currentParentID, storageID == self.storageID else {
+                isLoading = false
+                isReloading = false
+                return
+            }
+            let sorted = listed.sorted(by: Self.order)
+            entries = sorted
+            listingCache[key] = sorted
         } catch {
             errorMessage = error.friendlyMessage
             alerts?.error(String(format: NSLocalizedString("Failed to read folder: %@", comment: ""), error.friendlyMessage))
         }
         isLoading = false
+        isReloading = false
     }
 
     // MARK: Operations (the live events reconcile the list afterwards)
@@ -189,7 +230,7 @@ final class BrowserViewModel {
     }
 
     private func silentReconcile() async {
-        guard let transport, let storageID, !isLoading else { return }
+        guard let transport, let storageID, !isReloading else { return }
         let parent = currentParentID
         guard let ids = try? await transport.childIDs(of: parent, in: storageID) else { return }
         // Bail if the user navigated away during the await.
