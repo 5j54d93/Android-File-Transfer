@@ -29,6 +29,7 @@ final class TransferManager {
         let id = UUID()
         let name: String
         let direction: Direction
+        let destinationFolder: String?
         var completedBytes: Int64 = 0
         var totalBytes: Int64 = 0
         var status: Status = .waiting
@@ -42,9 +43,10 @@ final class TransferManager {
         /// promises to signal Finder when the destination file is ready.
         @ObservationIgnored var completion: (@Sendable (Error?) -> Void)?
 
-        init(name: String, direction: Direction, totalBytes: Int64, job: Job) {
+        init(name: String, direction: Direction, totalBytes: Int64, destinationFolder: String? = nil, job: Job) {
             self.name = name
             self.direction = direction
+            self.destinationFolder = destinationFolder
             self.totalBytes = totalBytes
             self.job = job
         }
@@ -110,6 +112,7 @@ final class TransferManager {
     func download(_ node: FileNode, from transport: any DeviceTransport, to folder: URL) {
         self.transport = transport
         let item = Item(name: node.name, direction: .download, totalBytes: node.size,
+                        destinationFolder: Self.displayName(forFolder: folder),
                         job: .download(node: node, folder: folder))
         enqueue(item)
     }
@@ -119,23 +122,28 @@ final class TransferManager {
     func downloadToURL(_ node: FileNode, from transport: any DeviceTransport, to destination: URL,
                        completion: @escaping @Sendable (Error?) -> Void) {
         self.transport = transport
+        let folder = destination.deletingLastPathComponent()
         let item = Item(name: node.name, direction: .download, totalBytes: node.size,
+                        destinationFolder: Self.displayName(forFolder: folder),
                         job: .downloadToURL(node: node, destination: destination))
         item.completion = completion
         enqueue(item)
     }
 
-    func upload(_ localURL: URL, toParent parentID: String?, storage storageID: String, via transport: any DeviceTransport) {
+    func upload(_ localURL: URL, toParent parentID: String?, storage storageID: String,
+                destinationFolder: String?, via transport: any DeviceTransport) {
         self.transport = transport
         let item = Item(name: localURL.lastPathComponent, direction: .upload,
                         totalBytes: Format.fileSize(at: localURL),
+                        destinationFolder: destinationFolder,
                         job: .upload(localURL: localURL, parentID: parentID, storageID: storageID))
         enqueue(item)
     }
 
     func retry(_ item: Item) {
         guard case .failed = item.status else { return }
-        let fresh = Item(name: item.name, direction: item.direction, totalBytes: item.totalBytes, job: item.job)
+        let fresh = Item(name: item.name, direction: item.direction, totalBytes: item.totalBytes,
+                         destinationFolder: item.destinationFolder, job: item.job)
         if let idx = items.firstIndex(where: { $0.id == item.id }) {
             items[idx] = fresh
         } else {
@@ -157,6 +165,11 @@ final class TransferManager {
         items.insert(item, at: 0)
         queue.append(item)
         pump()
+    }
+
+    private static func displayName(forFolder folder: URL) -> String {
+        let displayName = FileManager.default.displayName(atPath: folder.path(percentEncoded: false))
+        return displayName.isEmpty ? folder.path(percentEncoded: false) : displayName
     }
 
     // MARK: Serial pump
@@ -249,4 +262,5 @@ final class TransferManager {
             }
         }
     }
+
 }
