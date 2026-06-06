@@ -74,8 +74,8 @@ private struct StorageUsageLabel: View {
                 Capsule().fill(.quaternary).frame(width: 90, height: 6)
                 Capsule().fill(barColor).frame(width: 90 * CGFloat(usedFraction), height: 6)
             }
-            Text(String(format: NSLocalizedString("Used %d%% · Free %d%%", comment: ""),
-                        usedPct, 100 - usedPct))
+            Text(String(format: NSLocalizedString("Used %d%% · Free %d%% (%@ available)", comment: ""),
+                        usedPct, 100 - usedPct, Format.size(storage.freeBytes)))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
