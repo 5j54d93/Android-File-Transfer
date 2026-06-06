@@ -34,6 +34,10 @@ final class BrowserViewModel {
     /// True while `reload()` is fetching, so the 3s poll doesn't reconcile against a folder
     /// that's mid-load (covers both spinner loads and silent cached re-fetches).
     @ObservationIgnored private var isReloading = false
+    /// Reports whether a file transfer is in flight. While one is, the 3s poll and the
+    /// per-change storage-gauge refreshes are skipped so they don't compete with the transfer
+    /// on the single serial MTP channel (wired by the app from `TransferManager.activeCount`).
+    @ObservationIgnored var isTransferActive: () -> Bool = { false }
     @ObservationIgnored var alerts: AppAlerts?
     /// Called (debounced) when the device's free space likely changed, so the sidebar's
     /// per-device storage figures can refresh too — not just this view's path-bar gauge.
@@ -89,10 +93,26 @@ final class BrowserViewModel {
     /// Coalesce a burst of change events (e.g. a multi-file transfer or delete) into a single
     /// storage refresh shortly after they settle.
     private func scheduleStorageRefresh() {
+        // Don't refresh storage figures mid-transfer — the burst of change events would flood
+        // the serial MTP channel. The app does a single refresh once transfers finish.
+        guard !isTransferActive() else { return }
         storageRefreshTask?.cancel()
         storageRefreshTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(500))
-            guard let self, !Task.isCancelled else { return }
+            guard let self, !Task.isCancelled, !self.isTransferActive() else { return }
+            await self.refreshStorageInfo()
+            self.onStorageShouldRefresh?()
+        }
+    }
+
+    func cancelPendingStorageRefresh() {
+        storageRefreshTask?.cancel()
+    }
+
+    func refreshStorageAfterTransferBatch() {
+        storageRefreshTask?.cancel()
+        storageRefreshTask = Task { [weak self] in
+            guard let self, !Task.isCancelled, !self.isTransferActive() else { return }
             await self.refreshStorageInfo()
             self.onStorageShouldRefresh?()
         }
@@ -103,6 +123,7 @@ final class BrowserViewModel {
         cacheCurrentListing()
         pathStack.append(folder)
         selection = []
+        showCachedListingOrLoading(forParent: folder.id)
         Task { await reload() }
     }
 
@@ -111,6 +132,7 @@ final class BrowserViewModel {
         cacheCurrentListing()
         pathStack.removeLast()
         selection = []
+        showCachedListingOrLoading(forParent: currentParentID)
         Task { await reload() }
     }
 
@@ -120,6 +142,7 @@ final class BrowserViewModel {
         cacheCurrentListing()
         pathStack.removeLast(pathStack.count - depth)
         selection = []
+        showCachedListingOrLoading(forParent: currentParentID)
         Task { await reload() }
     }
 
@@ -141,6 +164,17 @@ final class BrowserViewModel {
 
     private func cache(_ nodes: [FileNode], forParent parentID: String?, in storageID: String) {
         listingCache[cacheKey(parentID, in: storageID)] = nodes.sorted(by: Self.order)
+    }
+
+    private func showCachedListingOrLoading(forParent parentID: String?) {
+        guard let storageID else { return }
+        if let cached = listingCache[cacheKey(parentID, in: storageID)] {
+            entries = cached
+            isLoading = false
+        } else {
+            entries = []
+            isLoading = true
+        }
     }
 
     private func addToCachedListing(_ node: FileNode) {
@@ -172,12 +206,20 @@ final class BrowserViewModel {
         guard let transport, let storageID else { return }
         let parent = currentParentID
         let key = cacheKey(parent, in: storageID)
-        // Seen this folder already? Show it instantly and skip the spinner; we still re-fetch
-        // below (silently) to pick up any device-side changes.
+        // Seen this folder already? Show it instantly and skip the spinner. When no transfer is
+        // active we still re-fetch below (silently) to pick up any device-side changes.
+        let hadCachedListing: Bool
         if let cached = listingCache[key] {
             entries = cached
+            hadCachedListing = true
         } else {
             isLoading = true
+            hadCachedListing = false
+        }
+        if hadCachedListing, isTransferActive() {
+            isLoading = false
+            errorMessage = nil
+            return
         }
         isReloading = true
         errorMessage = nil
@@ -268,7 +310,7 @@ final class BrowserViewModel {
     }
 
     private func silentReconcile() async {
-        guard let transport, let storageID, !isReloading else { return }
+        guard let transport, let storageID, !isReloading, !isTransferActive() else { return }
         let parent = currentParentID
         guard let ids = try? await transport.childIDs(of: parent, in: storageID) else { return }
         // Bail if the user navigated away during the await.
