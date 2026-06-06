@@ -16,20 +16,21 @@ struct TransferOverlayView: View {
 
     var body: some View {
         ZStack {
-            // Frosted glass over the whole app; also swallows clicks so the blurred content
-            // underneath can't be touched mid-transfer.
+            // A light scrim: dims and lightly frosts the app so the card is the focus, but the
+            // file list stays visible underneath. Still swallows clicks so nothing behind can be
+            // touched mid-transfer.
             Rectangle()
                 .fill(.ultraThinMaterial)
+                .opacity(0.55)
                 .ignoresSafeArea()
 
+            // The progress panel itself is the floating element, so it uses macOS 26 Liquid
+            // Glass (the material designed for floating controls) rather than a flat material.
             card
                 .frame(width: 400)
                 .padding(28)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16).strokeBorder(.separator, lineWidth: 0.5)
-                )
-                .shadow(color: .black.opacity(0.25), radius: 30, y: 10)
+                .glassEffect(in: .rect(cornerRadius: 16))
+                .shadow(color: .black.opacity(0.2), radius: 24, y: 8)
         }
     }
 
@@ -55,9 +56,17 @@ struct TransferOverlayView: View {
                 .symbolEffect(.pulse)
                 .padding(.bottom, 10)
 
-            Text("Transferring…")
-                .font(.headline)
-                .padding(.bottom, 12)
+            HStack(spacing: 6) {
+                Text("Transferring…")
+                    .font(.headline)
+                if transfers.batchTotal > 1 {
+                    Text("\(transfers.batchCompleted) / \(transfers.batchTotal)")
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
+                }
+            }
+            .padding(.bottom, 12)
 
             VStack(spacing: 4) {
                 if let name = transfers.currentItem?.name {
@@ -87,7 +96,7 @@ struct TransferOverlayView: View {
                 // brief successful fade-out when the batch has already cleared.
                 if shouldShowTransferStats {
                     HStack {
-                        Text("\(transfers.batchCompleted) / \(transfers.batchTotal)")
+                        Text(sizeText)
                             .contentTransition(.numericText())
                         Spacer(minLength: 8)
                         if !detailText.isEmpty {
@@ -127,6 +136,12 @@ struct TransferOverlayView: View {
 
     private var shouldShowTransferStats: Bool {
         transfers.batchTotal > 0
+    }
+
+    /// Current file's byte progress, e.g. "1.1 GB / 2.8 GB".
+    private var sizeText: String {
+        guard let item = transfers.currentItem, item.totalBytes > 0 else { return "" }
+        return "\(Format.size(item.completedBytes)) / \(Format.size(item.totalBytes))"
     }
 
     /// Speed · ETA for the current item, e.g. "2.4 MB/s · about 12s".
