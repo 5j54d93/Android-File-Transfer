@@ -47,11 +47,15 @@ final class BrowserViewModel {
     // MARK: Navigation
 
     func open(_ transport: any DeviceTransport, storage: StorageInfo) {
+        let isSameStorage = self.transport?.id == transport.id && self.storage?.id == storage.id
         self.transport = transport
         self.storage = storage
-        pathStack = []
-        selection = []
-        listingCache = [:]
+        if !isSameStorage {
+            pathStack = []
+            entries = []
+            selection = []
+            listingCache = [:]
+        }
         if observingTransportID != transport.id {
             startObserving(transport)
             observingTransportID = transport.id
@@ -123,11 +127,45 @@ final class BrowserViewModel {
         "\(storageID)/\(parentID ?? "")"
     }
 
+    private func currentCacheKey() -> String? {
+        guard let storageID else { return nil }
+        return cacheKey(currentParentID, in: storageID)
+    }
+
     /// Snapshot the current folder's listing into the cache before navigating away, so coming
     /// back shows it instantly — with whatever live updates it accumulated while it was shown.
     private func cacheCurrentListing() {
-        guard let storageID else { return }
-        listingCache[cacheKey(currentParentID, in: storageID)] = entries
+        guard let key = currentCacheKey() else { return }
+        listingCache[key] = entries
+    }
+
+    private func cache(_ nodes: [FileNode], forParent parentID: String?, in storageID: String) {
+        listingCache[cacheKey(parentID, in: storageID)] = nodes.sorted(by: Self.order)
+    }
+
+    private func addToCachedListing(_ node: FileNode) {
+        let key = cacheKey(node.parentID, in: node.storageID)
+        guard var cached = listingCache[key],
+              !cached.contains(where: { $0.id == node.id }) else { return }
+        cached.append(node)
+        cache(cached, forParent: node.parentID, in: node.storageID)
+    }
+
+    private func removeFromCachedListings(id: String) {
+        for key in Array(listingCache.keys) {
+            listingCache[key]?.removeAll { $0.id == id }
+        }
+        if let storageID {
+            listingCache[cacheKey(id, in: storageID)] = nil
+        }
+    }
+
+    private func updateCachedListing(with node: FileNode) {
+        for key in Array(listingCache.keys) {
+            guard let index = listingCache[key]?.firstIndex(where: { $0.id == node.id }) else { continue }
+            listingCache[key]?[index] = node
+            listingCache[key]?.sort(by: Self.order)
+        }
     }
 
     func reload() async {
@@ -244,41 +282,59 @@ final class BrowserViewModel {
 
         if !removed.isEmpty {
             entries.removeAll { removed.contains($0.id) }
-            for id in removed { selection.remove(id) }
+            for id in removed {
+                selection.remove(id)
+                removeFromCachedListings(id: id)
+            }
         }
         for id in added {
             guard parent == currentParentID else { return }
             if let node = try? await transport.metadata(for: id),
                !entries.contains(where: { $0.id == node.id }) {
                 entries.append(node)
+                addToCachedListing(node)
             }
         }
         entries.sort(by: Self.order)
+        cacheCurrentListing()
     }
 
     private func apply(_ change: DeviceChange) {
         switch change {
         case .added(let node):
             scheduleStorageRefresh()   // free space dropped
+            if node.storageID == storageID {
+                addToCachedListing(node)
+            }
             guard node.storageID == storageID, node.parentID == currentParentID else { return }
             if !entries.contains(where: { $0.id == node.id }) {
                 entries.append(node)
                 entries.sort(by: Self.order)
+                cacheCurrentListing()
             }
         case .removed(let id):
             scheduleStorageRefresh()   // free space recovered
+            let wasInCurrentListing = entries.contains { $0.id == id }
+            removeFromCachedListings(id: id)
             entries.removeAll { $0.id == id }
             selection.remove(id)
+            if wasInCurrentListing {
+                cacheCurrentListing()
+            }
             // If the current folder (or an ancestor) was deleted, pop above it.
             if let idx = pathStack.firstIndex(where: { $0.id == id }) {
                 pathStack.removeLast(pathStack.count - idx)
                 Task { await reload() }
             }
         case .changed(let node):
+            if node.storageID == storageID {
+                updateCachedListing(with: node)
+            }
             guard node.storageID == storageID, node.parentID == currentParentID else { return }
             if let i = entries.firstIndex(where: { $0.id == node.id }) {
                 entries[i] = node
                 entries.sort(by: Self.order)
+                cacheCurrentListing()
             }
         case .reloadNeeded(let parentID, let sid):
             if sid == storageID, parentID == currentParentID { Task { await reload() } }
