@@ -7,68 +7,104 @@
 
 import SwiftUI
 
-/// App-wide, transient error/notice banner shown at the top of the window. Operations
-/// that previously failed silently (delete/rename/upload errors, connection issues)
-/// post here so the user actually sees what went wrong.
+/// App-wide error/notice presented as a centred modal card (in the spirit of the transfer
+/// overlay), so failures the user must acknowledge — connection drops, failed folder reads —
+/// are clear and dismissible, rather than a banner that slides away on its own.
 @MainActor
 @Observable
 final class AppAlerts {
-    struct Notice: Identifiable, Equatable {
+    struct Notice: Identifiable {
         let id = UUID()
         var message: String
         var kind: Kind
+        /// Optional primary action (e.g. "Reconnect"). When nil the card shows only a dismiss button.
+        var actionTitle: String?
+        var action: (@MainActor () -> Void)?
         enum Kind { case error, info }
     }
 
     private(set) var current: Notice?
     @ObservationIgnored private var dismissTask: Task<Void, Never>?
 
-    func error(_ message: String) { show(Notice(message: message, kind: .error)) }
-    func info(_ message: String) { show(Notice(message: message, kind: .info)) }
+    /// A plain error the user dismisses with "Got it".
+    func error(_ message: String) {
+        show(Notice(message: message, kind: .error), autoDismiss: false)
+    }
+
+    /// An error offering a recovery action (e.g. reconnect) alongside "Got it".
+    func error(_ message: String, actionTitle: String, action: @escaping @MainActor () -> Void) {
+        show(Notice(message: message, kind: .error, actionTitle: actionTitle, action: action), autoDismiss: false)
+    }
+
+    /// A transient informational notice that fades on its own.
+    func info(_ message: String) {
+        show(Notice(message: message, kind: .info), autoDismiss: true)
+    }
 
     func dismiss() {
         dismissTask?.cancel()
         current = nil
     }
 
-    private func show(_ notice: Notice) {
+    private func show(_ notice: Notice, autoDismiss: Bool) {
         current = notice
         dismissTask?.cancel()
-        // Errors linger longer than info; both can be dismissed manually.
-        let seconds: UInt64 = notice.kind == .error ? 6 : 3
+        guard autoDismiss else { return }
         dismissTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(seconds))
+            try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled else { return }
             self?.current = nil
         }
     }
 }
 
-/// The banner view, overlaid at the top of the detail pane.
-struct AlertBanner: View {
+/// Centred modal alert card shown over the whole window. A flat panel (no Liquid Glass / big
+/// shadow) for the same reason as the transfer overlay — heavy offscreen renders stall the
+/// CoreAnimation commit.
+struct AlertOverlay: View {
     let notice: AppAlerts.Notice
     let onDismiss: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: notice.kind == .error ? "exclamationmark.triangle.fill" : "info.circle.fill")
-                .foregroundStyle(notice.kind == .error ? .white : .white)
-            Text(notice.message)
-                .foregroundStyle(.white)
-                .lineLimit(3)
-            Spacer(minLength: 8)
-            Button(action: onDismiss) {
-                Image(systemName: "xmark").foregroundStyle(.white.opacity(0.9))
+        ZStack {
+            // Scrim. Tapping it dismisses simple alerts; alerts with an action require an explicit
+            // choice, so the scrim is inert for those.
+            Rectangle()
+                .fill(Color.black.opacity(0.18))
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { if notice.action == nil { onDismiss() } }
+
+            VStack(spacing: 16) {
+                Image(systemName: notice.kind == .error ? "exclamationmark.triangle.fill" : "info.circle.fill")
+                    .font(.system(size: 34))
+                    .foregroundStyle(notice.kind == .error ? AnyShapeStyle(.yellow) : AnyShapeStyle(.tint))
+
+                Text(notice.message)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let actionTitle = notice.actionTitle, let action = notice.action {
+                    HStack {
+                        Button("Got It") { onDismiss() }
+                            .controlSize(.large)
+                        Spacer()
+                        Button(actionTitle) { action(); onDismiss() }
+                            .controlSize(.large)
+                            .buttonStyle(.borderedProminent)
+                            .keyboardShortcut(.defaultAction)
+                    }
+                } else {
+                    Button("Got It") { onDismiss() }
+                        .frame(maxWidth: .infinity)
+                        .controlSize(.large)
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.defaultAction)
+                }
             }
-            .buttonStyle(.plain)
+            .frame(width: 360)
+            .padding(28)
+            .background(.background, in: .rect(cornerRadius: 16))
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(notice.kind == .error ? Color.red.opacity(0.92) : Color.accentColor.opacity(0.92),
-                    in: RoundedRectangle(cornerRadius: 10))
-        .shadow(radius: 6, y: 2)
-        .padding(.horizontal, 16)
-        .padding(.top, 10)
-        .transition(.move(edge: .top).combined(with: .opacity))
     }
 }

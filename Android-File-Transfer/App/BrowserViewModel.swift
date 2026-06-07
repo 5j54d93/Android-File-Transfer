@@ -42,6 +42,10 @@ final class BrowserViewModel {
     /// Called (debounced) when the device's free space likely changed, so the sidebar's
     /// per-device storage figures can refresh too — not just this view's path-bar gauge.
     @ObservationIgnored var onStorageShouldRefresh: (() -> Void)?
+    /// Called when an operation fails because the USB connection was lost, so the app can offer
+    /// to reset + re-discover the device (and, if that can't recover it, fall back to the
+    /// "connect / re-enable File Transfer" empty state).
+    @ObservationIgnored var onConnectionLost: (() -> Void)?
 
     /// True while the app is frontmost. The 3s reconcile poll only runs when active — syncing a
     /// window the user can't see is pointless and just competes for the serial MTP channel.
@@ -51,6 +55,14 @@ final class BrowserViewModel {
     /// pile back onto the same serial channel and slow down whatever the user does next.
     @ObservationIgnored private var transferCooldownUntil: Date?
     private let postTransferCooldown: TimeInterval = 3
+
+    /// Files just added (e.g. by an upload) are shown immediately from the device's "added" event,
+    /// but Android can lag a few seconds before they appear in GetObjectHandles. Without this the
+    /// 3s poll would briefly remove the just-uploaded file ("device doesn't list it") and then
+    /// re-add it — a visible flicker/"wait". So we protect freshly-added ids from poll-removal for
+    /// a short grace window; after it expires the device's real listing wins.
+    @ObservationIgnored private var recentlyAddedIDs: [String: Date] = [:]
+    private let recentAddGrace: TimeInterval = 8
 
     var currentParentID: String? { pathStack.last?.id }
     var storageID: String? { storage?.id }
@@ -271,7 +283,12 @@ final class BrowserViewModel {
             listingCache[key] = sorted
         } catch {
             errorMessage = error.friendlyMessage
-            alerts?.error(String(format: NSLocalizedString("Failed to read folder: %@", comment: ""), error.friendlyMessage))
+            if error.isMTPConnectionLost, let onConnectionLost {
+                alerts?.error(NSLocalizedString("The connection to the device was lost. Make sure File Transfer is on, then reconnect.", comment: ""),
+                              actionTitle: NSLocalizedString("Reconnect", comment: "")) { onConnectionLost() }
+            } else {
+                alerts?.error(String(format: NSLocalizedString("Failed to read folder: %@", comment: ""), error.friendlyMessage))
+            }
         }
         isLoading = false
         isReloading = false
@@ -368,8 +385,12 @@ final class BrowserViewModel {
         // Bail if the user navigated away during the await.
         guard parent == currentParentID, storageID == self.storageID else { return }
 
+        // Don't remove files we added moments ago just because the device hasn't indexed them
+        // into GetObjectHandles yet; keep them until the grace window lapses (then the device wins).
+        let now = Date()
+        recentlyAddedIDs = recentlyAddedIDs.filter { now.timeIntervalSince($0.value) < recentAddGrace }
         let current = Set(entries.map(\.id))
-        let removed = current.subtracting(ids)
+        let removed = current.subtracting(ids).subtracting(recentlyAddedIDs.keys)
         let added = ids.subtracting(current)
         guard !removed.isEmpty || !added.isEmpty else { return }
         scheduleStorageRefresh()   // the folder changed → free space likely did too
@@ -403,6 +424,7 @@ final class BrowserViewModel {
                 addToCachedListing(node)
             }
             guard node.storageID == storageID, node.parentID == currentParentID else { return }
+            recentlyAddedIDs[node.id] = Date()   // shield from poll-removal during indexing lag
             if !entries.contains(where: { $0.id == node.id }) {
                 entries.append(node)
                 entries.sort(by: Self.order)
@@ -457,6 +479,19 @@ final class BrowserViewModel {
                 _ = await mock.simulateExternalAdd(named: "device_\(Int.random(in: 100...999)).bin",
                                                    inParent: parent, in: storageID)
             }
+        }
+    }
+}
+
+extension Error {
+    /// True when an MTP error means the USB connection is gone or wedged — only a reset +
+    /// re-discover (or re-enabling File Transfer on the phone) recovers it. Drives the
+    /// "Reconnect" alert action.
+    var isMTPConnectionLost: Bool {
+        guard let mtp = self as? MTPError else { return false }
+        switch mtp {
+        case .deviceStalled, .usb, .noDevice: return true
+        default: return false
         }
     }
 }

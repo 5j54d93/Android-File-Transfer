@@ -56,12 +56,6 @@ struct ContentView: View {
                     }
                 }
             }
-            .overlay(alignment: .top) {
-                if let notice = alerts.current {
-                    AlertBanner(notice: notice) { alerts.dismiss() }
-                        .animation(.spring(duration: 0.3), value: notice)
-                }
-            }
         }
         .onChange(of: deviceManager.selection, initial: true) { _, selection in
             applySelection(selection)
@@ -90,6 +84,10 @@ struct ContentView: View {
             transfers.alerts = alerts
             // When the browser detects free space changed, refresh the sidebar's figures too.
             browser.onStorageShouldRefresh = { Task { await deviceManager.refreshStorages() } }
+            // A lost USB connection offers a "Reconnect" action: reset + re-discover the device,
+            // then reload. If it can't recover, the device drops and the empty state guides the
+            // user to re-enable File Transfer on the phone.
+            browser.onConnectionLost = { Task { await deviceManager.refresh(); await browser.reload() } }
         }
         .sheet(isPresented: $deviceManager.showPairingSheet) {
             PairDeviceView(deviceManager: deviceManager)
@@ -108,6 +106,13 @@ struct ContentView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: transfers.isPresenting)
+        }
+        // Centred modal alert (errors / connection-lost), above everything else.
+        .overlay {
+            if let notice = alerts.current {
+                AlertOverlay(notice: notice) { alerts.dismiss() }
+                    .transition(.opacity)
+            }
         }
     }
 
