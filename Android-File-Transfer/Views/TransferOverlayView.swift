@@ -56,16 +56,12 @@ struct TransferOverlayView: View {
 
     private var progressCard: some View {
         VStack(spacing: 0) {
-            Image(systemName: directionIcon)
-                .font(.system(size: 34, weight: .regular))
-                .foregroundStyle(.tint)
-                .symbolEffect(.pulse)
-                .padding(.bottom, 10)
-
             Text(transferTitleText)
                 .font(.headline)
                 .contentTransition(.numericText())
-                .padding(.bottom, 12)
+            
+            stepBar
+                .padding(18)
 
             VStack(spacing: 4) {
                 if let name = transfers.currentItem?.name {
@@ -114,18 +110,101 @@ struct TransferOverlayView: View {
                 Button { transfers.cancelAll() } label: {
                     Text("Cancel")
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 4)
                 }
-                .controlSize(.large)
+                .buttonStyle(HoverFillButtonStyle())
                 .padding(.top, 12)
             }
         }
     }
 
-    /// Up/down arrow matching the in-flight item's direction (falls back to both when idle).
-    private var directionIcon: String {
-        guard let direction = transfers.currentItem?.direction else { return "arrow.up.arrow.down.circle" }
-        return direction == .download ? "arrow.down.circle" : "arrow.up.circle"
+    // MARK: Phase step indicator
+    //
+    // A file goes through three perceptible phases — Prepare (announce + wait for the channel),
+    // Transfer (the bytes), Complete (device commits to flash and confirms). The last one can
+    // visibly stall, so the indicator highlights it and the detail line explains we're waiting on
+    // the phone — rather than the bar looking stuck partway through.
+
+    private enum Phase: Int { case preparing = 0, transferring = 1, finalizing = 2 }
+    private enum StepState { case done, current, pending }
+
+    /// Which phase the current item is in, derived purely from its byte counts.
+    private var currentPhase: Phase {
+        guard let item = transfers.currentItem else { return .preparing }
+        if item.totalBytes > 0, item.completedBytes >= item.totalBytes { return .finalizing }
+        if item.completedBytes > 0 { return .transferring }
+        return .preparing
+    }
+
+    private func stepState(_ index: Int) -> StepState {
+        let current = currentPhase.rawValue
+        if index < current { return .done }
+        if index == current { return .current }
+        return .pending
+    }
+
+    private var directionArrowIcon: String {
+        transfers.currentItem?.direction == .download ? "arrow.down" : "arrow.up"
+    }
+
+    private var stepBar: some View {
+        HStack(alignment: .top, spacing: 6) {
+            stepNode(0, label: "Prepare", icon: "hourglass")
+            connector(after: 0)
+            stepNode(1, label: "Transfer", icon: directionArrowIcon)
+            connector(after: 1)
+            stepNode(2, label: "Complete", icon: "externaldrive")
+        }
+        .frame(maxWidth: 280)
+    }
+
+    /// Completed steps are green; the in-progress step keeps the accent tint.
+    private let stepDoneColor = Color.green
+
+    private func stepNode(_ index: Int, label: LocalizedStringKey, icon: String) -> some View {
+        let state = stepState(index)
+        let circleFill: AnyShapeStyle
+        switch state {
+        case .done: circleFill = AnyShapeStyle(stepDoneColor)
+        case .current: circleFill = AnyShapeStyle(.tint)
+        case .pending: circleFill = AnyShapeStyle(Color.secondary.opacity(0.15))
+        }
+        return VStack(spacing: 6) {
+            ZStack {
+                Circle()
+                    .fill(circleFill)
+                    .frame(width: 30, height: 30)
+                Image(systemName: state == .done ? "checkmark" : icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(state == .pending ? Color.secondary : Color.white)
+                    .symbolEffect(.pulse, isActive: state == .current)
+            }
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(state == .pending ? .secondary : .primary)
+        }
+        .fixedSize()
+    }
+
+    /// Flexible connector between two nodes; top padding lifts it to the circles' centre line
+    /// (the nodes' labels sit below, so a centred HStack would drop the line too low).
+    private func connector(after index: Int) -> some View {
+        let left = stepState(index)
+        let right = stepState(index + 1)
+        let fill: AnyShapeStyle
+        if left == .done, right == .current {
+            // The leading edge: a completed (green) step feeding the in-progress (blue) one.
+            fill = AnyShapeStyle(LinearGradient(colors: [stepDoneColor, .accentColor],
+                                                startPoint: .leading, endPoint: .trailing))
+        } else if left == .done {
+            fill = AnyShapeStyle(stepDoneColor)              // between two completed steps
+        } else {
+            fill = AnyShapeStyle(Color.secondary.opacity(0.2))
+        }
+        return Capsule()
+            .fill(fill)
+            .frame(height: 2)
+            .padding(.top, 14)
+            .frame(maxWidth: .infinity)
     }
 
     private var destinationFolderText: String? {
@@ -138,14 +217,21 @@ struct TransferOverlayView: View {
     }
 
     private var transferTitleText: String {
-        guard transfers.batchTotal > 1 else {
-            return NSLocalizedString("Transferring", comment: "")
+        switch currentPhase {
+        case .preparing:
+            return NSLocalizedString("Preparing…", comment: "")
+        case .finalizing:
+            return NSLocalizedString("Finalizing…", comment: "")
+        case .transferring:
+            guard transfers.batchTotal > 1 else {
+                return NSLocalizedString("Transferring", comment: "")
+            }
+            return String(
+                format: NSLocalizedString("Transferring (%lld/%lld)", comment: ""),
+                Int64(transfers.batchCompleted),
+                Int64(transfers.batchTotal)
+            )
         }
-        return String(
-            format: NSLocalizedString("Transferring (%lld/%lld)", comment: ""),
-            Int64(transfers.batchCompleted),
-            Int64(transfers.batchTotal)
-        )
     }
 
     /// Current file's byte progress, e.g. "1.1 GB / 2.8 GB".
@@ -154,11 +240,24 @@ struct TransferOverlayView: View {
         return "\(Format.size(item.completedBytes)) / \(Format.size(item.totalBytes))"
     }
 
-    /// Speed · ETA for the current item, e.g. "2.4 MB/s · about 12s".
+    /// Phase-specific subtext shown next to the byte count. During the transfer it's speed · ETA;
+    /// the title carries the phase name, so here we add only what the title can't: while finalizing,
+    /// *why* the bar is parked at 100% — the device is committing the file and we're awaiting its
+    /// confirmation (for uploads, explicitly "waiting for phone").
     private var detailText: String {
         guard let item = transfers.currentItem else { return "" }
-        let parts = [Format.speed(item.bytesPerSecond), Format.eta(item.etaSeconds)].compactMap { $0 }
-        return parts.joined(separator: " · ")
+        switch currentPhase {
+        case .finalizing:
+            return item.direction == .upload
+                ? NSLocalizedString("Waiting for phone to confirm…", comment: "upload bytes sent; awaiting device response")
+                : NSLocalizedString("Finalizing…", comment: "download bytes received; flushing to disk")
+        case .preparing:
+            return ""
+        case .transferring:
+            return [Format.speed(item.bytesPerSecond), Format.eta(item.etaSeconds)]
+                .compactMap { $0 }
+                .joined(separator: " · ")
+        }
     }
 
     // MARK: Failure
@@ -206,6 +305,35 @@ struct TransferOverlayView: View {
                     .keyboardShortcut(.defaultAction)
                     .buttonStyle(.borderedProminent)
             }
+        }
+    }
+}
+
+/// A full-width button that's quietly filled at rest and, on hover, fills with the accent colour
+/// and flips its text to white — giving the overlay's Cancel a clear, responsive affordance.
+/// (Hover state lives in a nested view because a `ButtonStyle` can't hold `@State` itself.)
+private struct HoverFillButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Hoverable(configuration: configuration)
+    }
+
+    private struct Hoverable: View {
+        let configuration: ButtonStyle.Configuration
+        @State private var hovering = false
+
+        var body: some View {
+            configuration.label
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .foregroundStyle(hovering ? Color.white : Color.primary)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(hovering ? AnyShapeStyle(Color.red) : AnyShapeStyle(Color.secondary.opacity(0.12)))
+                )
+                .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .opacity(configuration.isPressed ? 0.7 : 1)
+                .animation(.easeInOut(duration: 0.15), value: hovering)
+                .onHover { hovering = $0 }
         }
     }
 }

@@ -43,6 +43,23 @@ final class BrowserViewModel {
     /// per-device storage figures can refresh too — not just this view's path-bar gauge.
     @ObservationIgnored var onStorageShouldRefresh: (() -> Void)?
 
+    /// True while the app is frontmost. The 3s reconcile poll only runs when active — syncing a
+    /// window the user can't see is pointless and just competes for the serial MTP channel.
+    @ObservationIgnored private var isAppActive = true
+    /// After a transfer batch the poll stays quiet for this long, so the device can finalize the
+    /// file(s) — a large write leaves it rebuilding its object database — before background reads
+    /// pile back onto the same serial channel and slow down whatever the user does next.
+    @ObservationIgnored private var transferCooldownUntil: Date?
+    private let postTransferCooldown: TimeInterval = 3
+
+    /// True once a background sync (folder poll or storage-gauge refresh) has been running long
+    /// enough to be worth surfacing. The 400 ms debounce keeps routine, near-instant polls from
+    /// flashing the toolbar spinner every few seconds; only genuinely slow syncs (e.g. while the
+    /// device is busy) light it up. Drives the toolbar "Syncing…" indicator.
+    private(set) var isSyncing = false
+    @ObservationIgnored private var syncDepth = 0
+    @ObservationIgnored private var syncIndicatorTask: Task<Void, Never>?
+
     var currentParentID: String? { pathStack.last?.id }
     var storageID: String? { storage?.id }
     var canGoUp: Bool { !pathStack.isEmpty }
@@ -85,6 +102,8 @@ final class BrowserViewModel {
     /// or removed — so the path-bar gauge reflects the device's real free space.
     func refreshStorageInfo() async {
         guard let transport, let storageID else { return }
+        beginSync()
+        defer { endSync() }
         // Run the blocking MTP read off the main actor — otherwise the USB round-trip executes on
         // the main thread and freezes the UI for its full duration (~1s right after a write).
         let all = try? await Task.detached(priority: .userInitiated) {
@@ -93,6 +112,35 @@ final class BrowserViewModel {
         if let updated = all?.first(where: { $0.id == storageID }) {
             storage = updated
         }
+    }
+
+    // MARK: App-active gating & background-sync indicator
+
+    /// Called by the app as it gains/loses frontmost focus. The poll only runs while active;
+    /// on re-activation we reconcile once immediately to catch up on anything missed while away.
+    func setAppActive(_ active: Bool) {
+        guard active != isAppActive else { return }
+        isAppActive = active
+        if active { Task { await silentReconcile() } }
+    }
+
+    /// Bracket a background read so the toolbar can show a (debounced) "Syncing…" indicator.
+    private func beginSync() {
+        syncDepth += 1
+        guard syncIndicatorTask == nil else { return }
+        syncIndicatorTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard let self, !Task.isCancelled, self.syncDepth > 0 else { return }
+            self.isSyncing = true
+        }
+    }
+
+    private func endSync() {
+        syncDepth = max(0, syncDepth - 1)
+        guard syncDepth == 0 else { return }
+        syncIndicatorTask?.cancel()
+        syncIndicatorTask = nil
+        isSyncing = false
     }
 
     /// Coalesce a burst of change events (e.g. a multi-file transfer or delete) into a single
@@ -115,6 +163,9 @@ final class BrowserViewModel {
     }
 
     func refreshStorageAfterTransferBatch() {
+        // Quiet the background poll for a moment so the device can finalize the just-written
+        // file(s) before automatic reads resume on the serial channel.
+        transferCooldownUntil = Date().addingTimeInterval(postTransferCooldown)
         storageRefreshTask?.cancel()
         storageRefreshTask = Task { [weak self] in
             // Brief grace period: if the user navigates right after a transfer, their folder
@@ -257,11 +308,16 @@ final class BrowserViewModel {
 
     // MARK: Operations (the live events reconcile the list afterwards)
 
+    // These mutations are blocking USB round-trips, so they run off the main actor (under the
+    // macOS 26 SDK a nonisolated async call otherwise executes on the caller's executor — here the
+    // main thread — and freezes the UI for the device's full response, longer for large objects).
+    // The list updates afterwards from the live change events / poll, so there's nothing to await.
+
     func delete(_ ids: Set<String>) {
         guard let transport else { return }
         Task {
             for id in ids {
-                do { try await transport.delete(id) }
+                do { try await Task.detached(priority: .userInitiated) { try await transport.delete(id) }.value }
                 catch { alerts?.error(String(format: NSLocalizedString("Delete failed: %@", comment: ""), error.friendlyMessage)) }
             }
         }
@@ -269,8 +325,13 @@ final class BrowserViewModel {
 
     func createFolder(named name: String) {
         guard let transport, let storageID else { return }
+        let parentID = currentParentID
         Task {
-            do { try await transport.createDirectory(named: name, inParent: currentParentID, in: storageID) }
+            do {
+                try await Task.detached(priority: .userInitiated) {
+                    try await transport.createDirectory(named: name, inParent: parentID, in: storageID)
+                }.value
+            }
             catch { alerts?.error(String(format: NSLocalizedString("Failed to create folder: %@", comment: ""), error.friendlyMessage)) }
         }
     }
@@ -278,7 +339,9 @@ final class BrowserViewModel {
     func rename(_ id: String, to newName: String) {
         guard let transport else { return }
         Task {
-            do { try await transport.rename(id, to: newName) }
+            do {
+                try await Task.detached(priority: .userInitiated) { try await transport.rename(id, to: newName) }.value
+            }
             catch { alerts?.error(String(format: NSLocalizedString("Rename failed: %@", comment: ""), error.friendlyMessage)) }
         }
     }
@@ -323,7 +386,12 @@ final class BrowserViewModel {
     }
 
     private func silentReconcile() async {
-        guard let transport, let storageID, !isReloading, !isTransferActive() else { return }
+        guard let transport, let storageID, !isReloading, !isTransferActive(), isAppActive else { return }
+        // Stay quiet during the post-transfer cooldown so we don't compete with the device while
+        // it's finalizing a just-written file (or with the user's own next navigation).
+        if let until = transferCooldownUntil, Date() < until { return }
+        beginSync()
+        defer { endSync() }
         let parent = currentParentID
         guard let ids = try? await Task.detached(priority: .userInitiated, operation: {
             try await transport.childIDs(of: parent, in: storageID)

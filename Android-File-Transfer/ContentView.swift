@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var transfers = TransferManager()
     @State private var browser = BrowserViewModel()
     @State private var alerts = AppAlerts()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationSplitView {
@@ -37,6 +38,13 @@ struct ContentView: View {
                         }
                         .help("Pair Wireless Device…")
                         .disabled(transfers.isPresenting)
+                    }
+                    if browser.isSyncing && !deviceManager.isScanning {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .controlSize(.small)
+                            .frame(width: 28, height: 22)
+                            .help("Syncing…")
                     }
                     if deviceManager.isScanning {
                         ProgressView()
@@ -77,6 +85,11 @@ struct ContentView: View {
             } else if oldValue > 0 {
                 browser.refreshStorageAfterTransferBatch()
             }
+        }
+        // Only run the background poll while the app is frontmost — no point syncing a window
+        // the user can't see, and it keeps the serial MTP channel clear for whatever they do next.
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            browser.setAppActive(phase == .active)
         }
         .task {
             browser.alerts = alerts

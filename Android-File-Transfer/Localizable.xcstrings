@@ -196,6 +196,22 @@
         }
       }
     },
+    "Complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
     "Connect" : {
       "localizations" : {
         "en" : {
@@ -567,6 +583,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未開啟檔案傳輸"
+          }
+        }
+      }
+    },
+    "Finalizing…" : {
+      "comment" : "download bytes received; flushing to disk",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizing…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成中…"
           }
         }
       }
@@ -981,6 +1014,39 @@
         }
       }
     },
+    "Prepare" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prepare"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "準備"
+          }
+        }
+      }
+    },
+    "Preparing…" : {
+      "comment" : "shown before a transfer's first bytes flow",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "準備中…"
+          }
+        }
+      }
+    },
     "Refresh" : {
       "localizations" : {
         "en" : {
@@ -1221,6 +1287,22 @@
         }
       }
     },
+    "Syncing…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同步中…"
+          }
+        }
+      }
+    },
     "Tap \"Pair device with pairing code\"." : {
       "localizations" : {
         "en" : {
@@ -1281,6 +1363,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工具"
+          }
+        }
+      }
+    },
+    "Transfer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transfer"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "傳輸"
           }
         }
       }
@@ -1425,6 +1523,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已使用 %@・剩餘 %@（可用 %@）"
+          }
+        }
+      }
+    },
+    "Waiting for phone to confirm…" : {
+      "comment" : "upload bytes sent; awaiting device response",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for phone to confirm…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待手機確認…"
           }
         }
       }
