@@ -328,7 +328,7 @@ final class BrowserViewModel {
         let parentID = currentParentID
         Task {
             do {
-                try await Task.detached(priority: .userInitiated) {
+                _ = try await Task.detached(priority: .userInitiated) {
                     try await transport.createDirectory(named: name, inParent: parentID, in: storageID)
                 }.value
             }
@@ -340,7 +340,7 @@ final class BrowserViewModel {
         guard let transport else { return }
         Task {
             do {
-                try await Task.detached(priority: .userInitiated) { try await transport.rename(id, to: newName) }.value
+                _ = try await Task.detached(priority: .userInitiated) { try await transport.rename(id, to: newName) }.value
             }
             catch { alerts?.error(String(format: NSLocalizedString("Rename failed: %@", comment: ""), error.friendlyMessage)) }
         }
