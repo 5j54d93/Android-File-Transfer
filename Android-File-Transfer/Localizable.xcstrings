@@ -4,23 +4,6 @@
     "" : {
       "shouldTranslate" : false
     },
-    "%@ \"%@\" failed: %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ \"%@\" failed: %@"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@「%@」失敗：%@"
-          }
-        }
-      }
-    },
     "%@ File" : {
       "localizations" : {
         "en" : {
@@ -53,50 +36,50 @@
         }
       }
     },
-    "about %dh" : {
+    "about %.1fh" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "about %dh"
+            "value" : "about %.1fh"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "約 %d 小時"
+            "value" : "約 %.1f 時"
           }
         }
       }
     },
-    "about %dm" : {
+    "about %.1fm" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "about %dm"
+            "value" : "about %.1fm"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "約 %d 分"
+            "value" : "約 %.1f 分"
           }
         }
       }
     },
-    "about %ds" : {
+    "about %.1fs" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "about %ds"
+            "value" : "about %.1fs"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "約 %d 秒"
+            "value" : "約 %.1f 秒"
           }
         }
       }
@@ -454,23 +437,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "文件"
-          }
-        }
-      }
-    },
-    "Download" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "下載"
           }
         }
       }
@@ -1049,6 +1015,38 @@
         }
       }
     },
+    "Got It" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got It"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "知道了"
+          }
+        }
+      }
+    },
+    "Reconnect" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新連線"
+          }
+        }
+      }
+    },
     "Refresh" : {
       "localizations" : {
         "en" : {
@@ -1289,23 +1287,6 @@
         }
       }
     },
-    "Syncing…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Syncing…"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "同步中…"
-          }
-        }
-      }
-    },
     "Tap \"Pair device with pairing code\"." : {
       "localizations" : {
         "en" : {
@@ -1386,6 +1367,22 @@
         }
       }
     },
+    "The connection to the device was lost. Make sure File Transfer is on, then reconnect." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The connection to the device was lost. Make sure File Transfer is on, then reconnect."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "與裝置的連線中斷了，請確認手機已開啟「檔案傳輸」後重新連線。"
+          }
+        }
+      }
+    },
     "Transferring" : {
       "localizations" : {
         "en" : {
@@ -1462,23 +1459,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未命名資料夾"
-          }
-        }
-      }
-    },
-    "Upload" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Upload"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上傳"
           }
         }
       }

@@ -257,7 +257,7 @@ struct TransferOverlayView: View {
         case .transferring:
             return [Format.speed(item.bytesPerSecond), Format.eta(item.etaSeconds)]
                 .compactMap { $0 }
-                .joined(separator: " · ")
+                .joined(separator: "・")
         }
     }
 
