@@ -237,12 +237,9 @@ final class TransferManager {
             item.status = .cancelled
             item.completion?(CancellationError())
         } catch {
-            let message = error.friendlyMessage
-            item.status = .failed(message)
-            let verb = item.direction == .download
-                ? NSLocalizedString("Download", comment: "")
-                : NSLocalizedString("Upload", comment: "")
-            alerts?.error(String(format: NSLocalizedString("%@ \"%@\" failed: %@", comment: ""), verb, item.name, message))
+            // The failure (with its message) is surfaced in the transfer overlay's failure card,
+            // so we deliberately don't also raise the top alert banner — that was redundant.
+            item.status = .failed(error.friendlyMessage)
             item.completion?(error)
         }
     }
