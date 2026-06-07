@@ -62,17 +62,10 @@ struct TransferOverlayView: View {
                 .symbolEffect(.pulse)
                 .padding(.bottom, 10)
 
-            HStack(spacing: 6) {
-                Text("Transferring…")
-                    .font(.headline)
-                if transfers.batchTotal > 1 {
-                    Text("\(transfers.batchCompleted) / \(transfers.batchTotal)")
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .contentTransition(.numericText())
-                }
-            }
-            .padding(.bottom, 12)
+            Text(transferTitleText)
+                .font(.headline)
+                .contentTransition(.numericText())
+                .padding(.bottom, 12)
 
             VStack(spacing: 4) {
                 if let name = transfers.currentItem?.name {
@@ -144,6 +137,17 @@ struct TransferOverlayView: View {
         transfers.batchTotal > 0
     }
 
+    private var transferTitleText: String {
+        guard transfers.batchTotal > 1 else {
+            return NSLocalizedString("Transferring", comment: "")
+        }
+        return String(
+            format: NSLocalizedString("Transferring (%lld/%lld)", comment: ""),
+            Int64(transfers.batchCompleted),
+            Int64(transfers.batchTotal)
+        )
+    }
+
     /// Current file's byte progress, e.g. "1.1 GB / 2.8 GB".
     private var sizeText: String {
         guard let item = transfers.currentItem, item.totalBytes > 0 else { return "" }
@@ -161,13 +165,14 @@ struct TransferOverlayView: View {
 
     private var failureCard: some View {
         VStack(spacing: 18) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 34))
-                .foregroundStyle(.orange)
+            VStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 34))
+                    .foregroundStyle(.yellow)
 
-            Text("Some Transfers Failed")
-                .font(.headline)
-
+                Text("Some Transfers Failed")
+                    .font(.headline)
+            }
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(transfers.failedItems) { item in

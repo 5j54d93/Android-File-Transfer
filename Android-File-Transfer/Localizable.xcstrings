@@ -52,22 +52,6 @@
         }
       }
     },
-    "%lld / %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld / %2$lld"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld／%2$lld"
-          }
-        }
-      }
-    },
     "about %dh" : {
       "localizations" : {
         "en" : {
@@ -1301,18 +1285,34 @@
         }
       }
     },
-    "Transferring…" : {
+    "Transferring" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Transferring…"
+            "value" : "Transferring"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "傳輸中…"
+            "value" : "傳輸中"
+          }
+        }
+      }
+    },
+    "Transferring (%lld/%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transferring（%1$lld／%2$lld）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "傳輸中（%1$lld／%2$lld）"
           }
         }
       }
