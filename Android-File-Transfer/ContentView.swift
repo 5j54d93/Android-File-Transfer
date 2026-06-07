@@ -39,13 +39,6 @@ struct ContentView: View {
                         .help("Pair Wireless Device…")
                         .disabled(transfers.isPresenting)
                     }
-                    if browser.isSyncing && !deviceManager.isScanning {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .controlSize(.small)
-                            .frame(width: 28, height: 22)
-                            .help("Syncing…")
-                    }
                     if deviceManager.isScanning {
                         ProgressView()
                             .progressViewStyle(.circular)
