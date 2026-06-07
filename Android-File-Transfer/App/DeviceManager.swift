@@ -103,8 +103,15 @@ final class DeviceManager {
         guard !isRefreshing, !devices.isEmpty else { return }
         var updated: [Device] = []
         for device in devices {
-            let storages = (try? await device.transport.storages()) ?? device.storages
-            updated.append(Device(transport: device.transport, storages: storages))
+            // Off the main actor: under the macOS 26 SDK a nonisolated async call runs on the
+            // caller's executor, so reading storages here would otherwise run the blocking USB
+            // round-trip on the main thread — multi-second right after a large transfer, which
+            // froze the UI when navigating Back as the storage gauge refreshed.
+            let transport = device.transport
+            let storages = (try? await Task.detached(priority: .userInitiated) {
+                try await transport.storages()
+            }.value) ?? device.storages
+            updated.append(Device(transport: transport, storages: storages))
         }
         devices = updated
     }
@@ -130,7 +137,9 @@ final class DeviceManager {
         let hadConnection = realTransport != nil
         if let real = realTransport {
             do {
-                realStorages = try await real.storages()    // [] = locked (still connected)
+                realStorages = try await Task.detached(priority: .userInitiated) { [real] in
+                    try await real.storages()               // [] = locked (still connected)
+                }.value
             } catch MTPError.deviceStalled {
                 // Connection wedged mid-use — reset the USB device and re-discover below.
                 await real.close()
@@ -147,7 +156,9 @@ final class DeviceManager {
         if realTransport == nil {
             realTransport = await MTPTransport.discover()
             if let real = realTransport {
-                realStorages = (try? await real.storages()) ?? []
+                realStorages = (try? await Task.detached(priority: .userInitiated) { [real] in
+                    try await real.storages()
+                }.value) ?? []
             }
         }
 

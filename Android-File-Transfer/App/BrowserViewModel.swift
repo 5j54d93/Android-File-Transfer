@@ -257,11 +257,16 @@ final class BrowserViewModel {
 
     // MARK: Operations (the live events reconcile the list afterwards)
 
+    // These mutations are blocking USB round-trips, so they run off the main actor (under the
+    // macOS 26 SDK a nonisolated async call otherwise executes on the caller's executor — here the
+    // main thread — and freezes the UI for the device's full response, longer for large objects).
+    // The list updates afterwards from the live change events / poll, so there's nothing to await.
+
     func delete(_ ids: Set<String>) {
         guard let transport else { return }
         Task {
             for id in ids {
-                do { try await transport.delete(id) }
+                do { try await Task.detached(priority: .userInitiated) { try await transport.delete(id) }.value }
                 catch { alerts?.error(String(format: NSLocalizedString("Delete failed: %@", comment: ""), error.friendlyMessage)) }
             }
         }
@@ -269,8 +274,13 @@ final class BrowserViewModel {
 
     func createFolder(named name: String) {
         guard let transport, let storageID else { return }
+        let parentID = currentParentID
         Task {
-            do { try await transport.createDirectory(named: name, inParent: currentParentID, in: storageID) }
+            do {
+                try await Task.detached(priority: .userInitiated) {
+                    try await transport.createDirectory(named: name, inParent: parentID, in: storageID)
+                }.value
+            }
             catch { alerts?.error(String(format: NSLocalizedString("Failed to create folder: %@", comment: ""), error.friendlyMessage)) }
         }
     }
@@ -278,7 +288,9 @@ final class BrowserViewModel {
     func rename(_ id: String, to newName: String) {
         guard let transport else { return }
         Task {
-            do { try await transport.rename(id, to: newName) }
+            do {
+                try await Task.detached(priority: .userInitiated) { try await transport.rename(id, to: newName) }.value
+            }
             catch { alerts?.error(String(format: NSLocalizedString("Rename failed: %@", comment: ""), error.friendlyMessage)) }
         }
     }
