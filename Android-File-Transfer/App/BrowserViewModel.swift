@@ -52,14 +52,6 @@ final class BrowserViewModel {
     @ObservationIgnored private var transferCooldownUntil: Date?
     private let postTransferCooldown: TimeInterval = 3
 
-    /// True once a background sync (folder poll or storage-gauge refresh) has been running long
-    /// enough to be worth surfacing. The 400 ms debounce keeps routine, near-instant polls from
-    /// flashing the toolbar spinner every few seconds; only genuinely slow syncs (e.g. while the
-    /// device is busy) light it up. Drives the toolbar "Syncing…" indicator.
-    private(set) var isSyncing = false
-    @ObservationIgnored private var syncDepth = 0
-    @ObservationIgnored private var syncIndicatorTask: Task<Void, Never>?
-
     var currentParentID: String? { pathStack.last?.id }
     var storageID: String? { storage?.id }
     var canGoUp: Bool { !pathStack.isEmpty }
@@ -102,8 +94,6 @@ final class BrowserViewModel {
     /// or removed — so the path-bar gauge reflects the device's real free space.
     func refreshStorageInfo() async {
         guard let transport, let storageID else { return }
-        beginSync()
-        defer { endSync() }
         // Run the blocking MTP read off the main actor — otherwise the USB round-trip executes on
         // the main thread and freezes the UI for its full duration (~1s right after a write).
         let all = try? await Task.detached(priority: .userInitiated) {
@@ -114,7 +104,7 @@ final class BrowserViewModel {
         }
     }
 
-    // MARK: App-active gating & background-sync indicator
+    // MARK: App-active gating
 
     /// Called by the app as it gains/loses frontmost focus. The poll only runs while active;
     /// on re-activation we reconcile once immediately to catch up on anything missed while away.
@@ -122,25 +112,6 @@ final class BrowserViewModel {
         guard active != isAppActive else { return }
         isAppActive = active
         if active { Task { await silentReconcile() } }
-    }
-
-    /// Bracket a background read so the toolbar can show a (debounced) "Syncing…" indicator.
-    private func beginSync() {
-        syncDepth += 1
-        guard syncIndicatorTask == nil else { return }
-        syncIndicatorTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(400))
-            guard let self, !Task.isCancelled, self.syncDepth > 0 else { return }
-            self.isSyncing = true
-        }
-    }
-
-    private func endSync() {
-        syncDepth = max(0, syncDepth - 1)
-        guard syncDepth == 0 else { return }
-        syncIndicatorTask?.cancel()
-        syncIndicatorTask = nil
-        isSyncing = false
     }
 
     /// Coalesce a burst of change events (e.g. a multi-file transfer or delete) into a single
@@ -390,8 +361,6 @@ final class BrowserViewModel {
         // Stay quiet during the post-transfer cooldown so we don't compete with the device while
         // it's finalizing a just-written file (or with the user's own next navigation).
         if let until = transferCooldownUntil, Date() < until { return }
-        beginSync()
-        defer { endSync() }
         let parent = currentParentID
         guard let ids = try? await Task.detached(priority: .userInitiated, operation: {
             try await transport.childIDs(of: parent, in: storageID)

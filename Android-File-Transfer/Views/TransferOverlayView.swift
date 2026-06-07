@@ -36,7 +36,9 @@ struct TransferOverlayView: View {
                 .frame(width: 400)
                 .padding(28)
                 .background(.background, in: .rect(cornerRadius: 16))
-                .shadow(color: .black.opacity(0.2), radius: 24, y: 8)
+                // No drop shadow: a blurred shadow is an offscreen render the CoreAnimation commit
+                // re-rasterises, which is costly when the overlay tears down as the file list
+                // re-renders after a transfer. The scrim already separates the card from the page.
         }
     }
 
@@ -176,7 +178,6 @@ struct TransferOverlayView: View {
                 Image(systemName: state == .done ? "checkmark" : icon)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(state == .pending ? Color.secondary : Color.white)
-                    .symbolEffect(.pulse, isActive: state == .current)
             }
             Text(label)
                 .font(.caption2)
