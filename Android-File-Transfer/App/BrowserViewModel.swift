@@ -85,7 +85,12 @@ final class BrowserViewModel {
     /// or removed — so the path-bar gauge reflects the device's real free space.
     func refreshStorageInfo() async {
         guard let transport, let storageID else { return }
-        if let updated = try? await transport.storages().first(where: { $0.id == storageID }) {
+        // Run the blocking MTP read off the main actor — otherwise the USB round-trip executes on
+        // the main thread and freezes the UI for its full duration (~1s right after a write).
+        let all = try? await Task.detached(priority: .userInitiated) {
+            try await transport.storages()
+        }.value
+        if let updated = all?.first(where: { $0.id == storageID }) {
             storage = updated
         }
     }
@@ -228,7 +233,11 @@ final class BrowserViewModel {
         isReloading = true
         errorMessage = nil
         do {
-            let listed = try await transport.listChildren(of: parent, in: storageID)
+            // Off the main actor: the MTP listing does blocking USB I/O, which would otherwise
+            // run on the main thread and freeze the UI for the whole device round-trip.
+            let listed = try await Task.detached(priority: .userInitiated) {
+                try await transport.listChildren(of: parent, in: storageID)
+            }.value
             // The user may have navigated elsewhere while this was in flight.
             guard parent == currentParentID, storageID == self.storageID else {
                 isLoading = false
@@ -316,7 +325,9 @@ final class BrowserViewModel {
     private func silentReconcile() async {
         guard let transport, let storageID, !isReloading, !isTransferActive() else { return }
         let parent = currentParentID
-        guard let ids = try? await transport.childIDs(of: parent, in: storageID) else { return }
+        guard let ids = try? await Task.detached(priority: .userInitiated, operation: {
+            try await transport.childIDs(of: parent, in: storageID)
+        }).value else { return }
         // Bail if the user navigated away during the await.
         guard parent == currentParentID, storageID == self.storageID else { return }
 
@@ -335,7 +346,9 @@ final class BrowserViewModel {
         }
         for id in added {
             guard parent == currentParentID else { return }
-            if let node = try? await transport.metadata(for: id),
+            if let node = try? await Task.detached(priority: .userInitiated, operation: {
+                   try await transport.metadata(for: id)
+               }).value,
                !entries.contains(where: { $0.id == node.id }) {
                 entries.append(node)
                 addToCachedListing(node)
