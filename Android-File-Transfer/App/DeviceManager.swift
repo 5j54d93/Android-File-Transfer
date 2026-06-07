@@ -141,20 +141,27 @@ final class DeviceManager {
                     try await real.storages()               // [] = locked (still connected)
                 }.value
             } catch MTPError.deviceStalled {
-                // Connection wedged mid-use — reset the USB device and re-discover below.
-                await real.close()
+                // Connection wedged mid-use — reset the USB device and re-discover below. Closing
+                // and resetting do blocking USB work, so run them off the main actor (otherwise,
+                // under the macOS 26 SDK, they execute on the main thread and freeze the UI for
+                // the full reset — the multi-second hang seen right after a connection hiccup).
+                await Task.detached(priority: .userInitiated) {
+                    await real.close()
+                    MTPTransport.recoverByReset()
+                }.value
                 realTransport = nil
                 realStorages = nil
-                MTPTransport.recoverByReset()
                 try? await Task.sleep(for: .seconds(2))     // wait for re-enumeration
             } catch {
-                await real.close()
+                await Task.detached(priority: .userInitiated) { await real.close() }.value
                 realTransport = nil
                 realStorages = nil
             }
         }
         if realTransport == nil {
-            realTransport = await MTPTransport.discover()
+            realTransport = await Task.detached(priority: .userInitiated) {
+                await MTPTransport.discover()
+            }.value
             if let real = realTransport {
                 realStorages = (try? await Task.detached(priority: .userInitiated) { [real] in
                     try await real.storages()
