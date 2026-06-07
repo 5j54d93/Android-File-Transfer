@@ -89,14 +89,20 @@ struct ContentView: View {
             PairDeviceView(deviceManager: deviceManager)
         }
         // Frosted-glass transfer overlay over the whole window; fades out the instant the
-        // batch finishes (or stays to show failures).
+        // batch finishes (or stays to show failures). The fade animation is scoped to the overlay
+        // itself — NOT the whole NavigationSplitView. `.animation(value:)` on a large view tree
+        // makes SwiftUI treat the file table's *own* updates (e.g. re-listing after a transfer)
+        // as animatable, turning an instant re-render into a ~1.5s animated relayout — which was
+        // the "freezes on Back right after an upload" hang.
         .overlay {
-            if transfers.isPresenting {
-                TransferOverlayView(transfers: transfers)
-                    .transition(.opacity)
+            Group {
+                if transfers.isPresenting {
+                    TransferOverlayView(transfers: transfers)
+                        .transition(.opacity)
+                }
             }
+            .animation(.easeInOut(duration: 0.25), value: transfers.isPresenting)
         }
-        .animation(.easeInOut(duration: 0.25), value: transfers.isPresenting)
     }
 
     @ViewBuilder
