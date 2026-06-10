@@ -64,13 +64,15 @@ final class AppAlerts {
 struct AlertOverlay: View {
     let notice: AppAlerts.Notice
     let onDismiss: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
             // Scrim. Tapping it dismisses simple alerts; alerts with an action require an explicit
-            // choice, so the scrim is inert for those.
+            // choice, so the scrim is inert for those. Dark mode gets a much stronger dim — black
+            // over an already-dark window barely reads at 0.18.
             Rectangle()
-                .fill(Color.black.opacity(0.18))
+                .fill(Color.black.opacity(colorScheme == .dark ? 0.45 : 0.18))
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture { if notice.action == nil { onDismiss() } }
@@ -105,6 +107,8 @@ struct AlertOverlay: View {
             .frame(width: 360)
             .padding(28)
             .background(.background, in: .rect(cornerRadius: 16))
+            // Hairline edge so the card reads against a dark window (same as the transfer card).
+            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.separator, lineWidth: 1))
         }
     }
 }

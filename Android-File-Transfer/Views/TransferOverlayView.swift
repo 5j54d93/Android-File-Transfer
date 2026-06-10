@@ -13,6 +13,7 @@ import SwiftUI
 /// failures it stays put, listing them with Retry All / Close.
 struct TransferOverlayView: View {
     @Bindable var transfers: TransferManager
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
@@ -22,8 +23,10 @@ struct TransferOverlayView: View {
             // a full-window material is a live backdrop blur, and animating it in/out forces the
             // whole window (the file table) to re-render every frame — which caused a ~2s
             // main-thread hang when navigating right after a transfer finished.
+            // Dark mode needs a much stronger scrim — black over an already-dark window barely
+            // reads at 0.18, leaving the card's boundary indistinct.
             Rectangle()
-                .fill(Color.black.opacity(0.18))
+                .fill(Color.black.opacity(colorScheme == .dark ? 0.45 : 0.18))
                 .ignoresSafeArea()
 
             // Solid panel — deliberately NOT `.glassEffect` (Liquid Glass). The paused main-thread
@@ -38,7 +41,10 @@ struct TransferOverlayView: View {
                 .background(.background, in: .rect(cornerRadius: 16))
                 // No drop shadow: a blurred shadow is an offscreen render the CoreAnimation commit
                 // re-rasterises, which is costly when the overlay tears down as the file list
-                // re-renders after a transfer. The scrim already separates the card from the page.
+                // re-renders after a transfer. The scrim already separates the card from the page;
+                // a hairline stroke (cheap, no offscreen pass) keeps the edge crisp in dark mode
+                // where the card and window backgrounds are nearly the same colour.
+                .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.separator, lineWidth: 1))
         }
     }
 
