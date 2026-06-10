@@ -29,6 +29,11 @@ struct AndroidFileTransferApp: App {
             }
         }
 
+        // The standard macOS Settings window (app menu → Settings…, ⌘,).
+        Settings {
+            SettingsView()
+        }
+
         Window("USB Diagnostics", id: Self.diagnosticsWindowID) {
             USBDiagnosticsView()
         }

@@ -4,6 +4,25 @@
     "" : {
       "shouldTranslate" : false
     },
+    "\"%@\" is using the USB connection to the device, so the phone can't be reached. Quit it, then rescan." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" is using the USB connection to the device, so the phone can't be reached. Quit it, then rescan."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」正在使用與裝置的 USB 連線，因此無法連上手機。請結束它後重新掃描。"
+          }
+        }
+      }
+    },
+    "%@ " : {
+
+    },
     "%@ File" : {
       "localizations" : {
         "en" : {
@@ -32,6 +51,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 可用，共 %@"
+          }
+        }
+      }
+    },
+    "%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@"
           }
         }
       }
@@ -128,6 +157,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Android 檔案傳輸"
+          }
+        }
+      }
+    },
+    "Auto Refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto Refresh"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動重整"
+          }
+        }
+      }
+    },
+    "Auto Refresh Off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto Refresh Off"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉自動重整"
+          }
+        }
+      }
+    },
+    "Automatically refresh the file list" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatically refresh the file list"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動重新整理檔案列表"
           }
         }
       }
@@ -507,6 +584,22 @@
         }
       }
     },
+    "Every %lld seconds" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every %lld seconds"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每 %lld 秒"
+          }
+        }
+      }
+    },
     "Failed to create folder: %@" : {
       "localizations" : {
         "en" : {
@@ -584,6 +677,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "資料夾"
+          }
+        }
+      }
+    },
+    "Got It" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got It"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "知道了"
           }
         }
       }
@@ -1015,18 +1124,34 @@
         }
       }
     },
-    "Got It" : {
+    "Quit \"%@\" and Rescan" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Got It"
+            "value" : "Quit \"%@\" and Rescan"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "知道了"
+            "value" : "結束「%@」並重新掃描"
+          }
+        }
+      }
+    },
+    "When on, the current folder is checked every few seconds, so files added or removed on the phone show up automatically. A shorter interval keeps the list fresher, but the check shares the USB connection with file transfers and may occasionally delay the start of a transfer for a moment. When off, changes reported by the phone still appear, and you can always refresh manually from the toolbar." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When on, the current folder is checked every few seconds, so files added or removed on the phone show up automatically. A shorter interval keeps the list fresher, but the check shares the USB connection with file transfers and may occasionally delay the start of a transfer for a moment. When off, changes reported by the phone still appear, and you can always refresh manually from the toolbar."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟後，每隔幾秒會檢查一次目前資料夾，手機端新增或移除的檔案就會自動出現在列表中。間隔越短，列表越即時，但這項檢查與檔案傳輸共用同一條 USB 連線，偶爾可能讓傳輸晚一點才開始；間隔越長則越省資源。關閉後，手機主動回報的變動仍會顯示，也隨時可以從工具列手動重新整理。"
           }
         }
       }
@@ -1176,6 +1301,7 @@
       }
     },
     "Scanning…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1319,6 +1445,22 @@
         }
       }
     },
+    "The connection to the device was lost. Make sure File Transfer is on, then reconnect." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The connection to the device was lost. Make sure File Transfer is on, then reconnect."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "與裝置的連線中斷了，請確認手機已開啟「檔案傳輸」後重新連線。"
+          }
+        }
+      }
+    },
     "This Folder Is Empty" : {
       "localizations" : {
         "en" : {
@@ -1363,22 +1505,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "傳輸"
-          }
-        }
-      }
-    },
-    "The connection to the device was lost. Make sure File Transfer is on, then reconnect." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The connection to the device was lost. Make sure File Transfer is on, then reconnect."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "與裝置的連線中斷了，請確認手機已開啟「檔案傳輸」後重新連線。"
           }
         }
       }
@@ -1527,6 +1653,9 @@
           }
         }
       }
+    },
+    "When on, the current folder is checked every few seconds, so files added or removed on the phone show up automatically. A shorter interval keeps the list fresher, but the check shares the USB connection with file transfers and may occasionally delay the start of a transfer for a moment. When off, changes reported by the phone still appear, and you can always refresh manually from the toolbar." : {
+
     }
   },
   "version" : "1.1"

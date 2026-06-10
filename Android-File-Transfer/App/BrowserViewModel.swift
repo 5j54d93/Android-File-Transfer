@@ -361,9 +361,16 @@ final class BrowserViewModel {
         pollTask?.cancel()
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(3))
+                // Re-read the user's auto-refresh settings every cycle so Settings changes apply
+                // immediately — toggling pauses the reconcile, the interval drives the sleep.
+                let defaults = UserDefaults.standard
+                let enabled = (defaults.object(forKey: AppSettingsKey.autoRefreshEnabled) as? Bool)
+                    ?? AppSettingsKey.defaultAutoRefreshEnabled
+                let interval = (defaults.object(forKey: AppSettingsKey.autoRefreshInterval) as? Int)
+                    ?? AppSettingsKey.defaultAutoRefreshInterval
+                try? await Task.sleep(for: .seconds(max(1, min(60, interval))))
                 guard let self, !Task.isCancelled else { break }
-                await self.silentReconcile()
+                if enabled { await self.silentReconcile() }
             }
         }
     }
