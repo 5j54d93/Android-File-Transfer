@@ -5,6 +5,7 @@
 //  Created by Ricky on 2026/5/29.
 //
 
+import AppKit
 import SwiftUI
 import MTPKit
 
@@ -170,6 +171,22 @@ struct ContentView: View {
         }
     }
 
+    /// The imaging app (Photos / Image Capture) currently running, if any. While one is open,
+    /// macOS's imaging service keeps re-claiming the PTP/MTP device on its behalf, so our seize
+    /// is undone moments later — the only reliable fix is quitting that app.
+    private var ptpClaimant: NSRunningApplication? {
+        let ids = ["com.apple.Photos", "com.apple.Image_Capture"]
+        return NSWorkspace.shared.runningApplications.first { ids.contains($0.bundleIdentifier ?? "") }
+    }
+
+    private var wifiPairingButton: some View {
+        Button {
+            deviceManager.showPairingSheet = true
+        } label: {
+            Label("No cable? Connect over Wi-Fi", systemImage: "wifi")
+        }
+    }
+
     @ViewBuilder
     private var emptyState: some View {
         if deviceManager.isSearchingWithNoDevices {
@@ -178,15 +195,37 @@ struct ContentView: View {
             ContentUnavailableView {
                 Label("No Android Device Connected", systemImage: "iphone.slash")
             } description: {
-                Text("Connect an Android device via USB and choose \"File Transfer\" mode on the phone.")
+                if let claimant = ptpClaimant {
+                    // While Photos / Image Capture is open, macOS's imaging service keeps
+                    // re-claiming the PTP/MTP device, so we lose the tug of war every time.
+                    Text(String(format: NSLocalizedString("\"%@\" is using the USB connection to the device, so the phone can't be reached. Quit it, then rescan.", comment: ""),
+                                claimant.localizedName ?? "Photos"))
+                } else {
+                    Text("Connect an Android device via USB and choose \"File Transfer\" mode on the phone.")
+                }
             } actions: {
-                if deviceManager.wirelessAvailable {
+                if let claimant = ptpClaimant {
                     Button {
-                        deviceManager.showPairingSheet = true
+                        claimant.terminate()
+                        Task {
+                            try? await Task.sleep(for: .seconds(1.2))   // let it release the device
+                            await deviceManager.refresh()
+                        }
                     } label: {
-                        Label("No cable? Connect over Wi-Fi", systemImage: "wifi")
+                        Label(String(format: NSLocalizedString("Quit \"%@\" and Rescan", comment: ""),
+                                     claimant.localizedName ?? "Photos"),
+                              systemImage: "xmark.circle")
                     }
                     .buttonStyle(.borderedProminent)
+                }
+                if deviceManager.wirelessAvailable {
+                    // Only one primary action at a time: Wi-Fi steps down when the quit-app
+                    // button is showing.
+                    if ptpClaimant == nil {
+                        wifiPairingButton.buttonStyle(.borderedProminent)
+                    } else {
+                        wifiPairingButton.buttonStyle(.bordered)
+                    }
                 }
             }
         } else if case .device(let id) = deviceManager.selection,
