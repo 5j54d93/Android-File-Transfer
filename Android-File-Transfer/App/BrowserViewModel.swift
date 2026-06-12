@@ -62,6 +62,7 @@ final class BrowserViewModel {
     /// re-add it — a visible flicker/"wait". So we protect freshly-added ids from poll-removal for
     /// a short grace window; after it expires the device's real listing wins.
     @ObservationIgnored private var recentlyAddedIDs: [String: Date] = [:]
+    @ObservationIgnored private var recentlyAddedNodes: [String: FileNode] = [:]
     private let recentAddGrace: TimeInterval = 8
 
     var currentParentID: String? { pathStack.last?.id }
@@ -220,20 +221,39 @@ final class BrowserViewModel {
         }
     }
 
-    private func addToCachedListing(_ node: FileNode) {
+    private func addToCachedListing(_ node: FileNode, removingExisting: Bool = false) {
+        if removingExisting {
+            removeFromCachedListings(id: node.id, clearingRecent: false)
+        }
         let key = cacheKey(node.parentID, in: node.storageID)
-        guard var cached = listingCache[key],
-              !cached.contains(where: { $0.id == node.id }) else { return }
-        cached.append(node)
+        guard var cached = listingCache[key] else { return }
+        if let index = cached.firstIndex(where: { $0.id == node.id }) {
+            cached[index] = node
+        } else {
+            cached.append(node)
+        }
         cache(cached, forParent: node.parentID, in: node.storageID)
     }
 
-    private func removeFromCachedListings(id: String) {
+    private func upsertCurrentEntry(_ node: FileNode) {
+        if let index = entries.firstIndex(where: { $0.id == node.id }) {
+            entries[index] = node
+        } else {
+            entries.append(node)
+        }
+        entries.sort(by: Self.order)
+    }
+
+    private func removeFromCachedListings(id: String, clearingRecent: Bool = true) {
         for key in Array(listingCache.keys) {
             listingCache[key]?.removeAll { $0.id == id }
         }
         if let storageID {
             listingCache[cacheKey(id, in: storageID)] = nil
+        }
+        if clearingRecent {
+            recentlyAddedIDs[id] = nil
+            recentlyAddedNodes[id] = nil
         }
     }
 
@@ -243,6 +263,53 @@ final class BrowserViewModel {
             listingCache[key]?[index] = node
             listingCache[key]?.sort(by: Self.order)
         }
+    }
+
+    private func rememberRecentlyAdded(_ node: FileNode) {
+        recentlyAddedIDs[node.id] = Date()
+        recentlyAddedNodes[node.id] = node
+    }
+
+    private func pruneRecentlyAdded(now: Date = Date()) {
+        recentlyAddedIDs = recentlyAddedIDs.filter { now.timeIntervalSince($0.value) < recentAddGrace }
+        recentlyAddedNodes = recentlyAddedNodes.filter { recentlyAddedIDs[$0.key] != nil }
+    }
+
+    private func protectedNode(for node: FileNode) -> FileNode {
+        pruneRecentlyAdded()
+        return recentlyAddedNodes[node.id] ?? node
+    }
+
+    private func locatedNode(_ node: FileNode, parentID: String?, storageID: String) -> FileNode {
+        FileNode(id: node.id,
+                 storageID: storageID,
+                 parentID: parentID,
+                 name: node.name,
+                 isDirectory: node.isDirectory,
+                 size: node.size,
+                 modifiedDate: node.modifiedDate,
+                 fileExtension: node.fileExtension)
+    }
+
+    private func listingWithRecentlyAdded(_ listed: [FileNode], parentID: String?, storageID: String) -> [FileNode] {
+        pruneRecentlyAdded()
+        var merged = listed.map { recentlyAddedNodes[$0.id] ?? $0 }
+        var seen = Set(merged.map(\.id))
+        for node in recentlyAddedNodes.values where node.storageID == storageID && node.parentID == parentID {
+            guard !seen.contains(node.id) else { continue }
+            merged.append(node)
+            seen.insert(node.id)
+        }
+        return merged.sorted(by: Self.order)
+    }
+
+    func recordCompletedUpload(_ node: FileNode) {
+        guard node.storageID == storageID else { return }
+        rememberRecentlyAdded(node)
+        addToCachedListing(node, removingExisting: true)
+        guard node.parentID == currentParentID else { return }
+        upsertCurrentEntry(node)
+        cacheCurrentListing()
     }
 
     func reload() async {
@@ -278,7 +345,7 @@ final class BrowserViewModel {
                 isReloading = false
                 return
             }
-            let sorted = listed.sorted(by: Self.order)
+            let sorted = listingWithRecentlyAdded(listed, parentID: parent, storageID: storageID)
             entries = sorted
             listingCache[key] = sorted
         } catch {
@@ -394,8 +461,7 @@ final class BrowserViewModel {
 
         // Don't remove files we added moments ago just because the device hasn't indexed them
         // into GetObjectHandles yet; keep them until the grace window lapses (then the device wins).
-        let now = Date()
-        recentlyAddedIDs = recentlyAddedIDs.filter { now.timeIntervalSince($0.value) < recentAddGrace }
+        pruneRecentlyAdded()
         let current = Set(entries.map(\.id))
         let removed = current.subtracting(ids).subtracting(recentlyAddedIDs.keys)
         let added = ids.subtracting(current)
@@ -411,10 +477,11 @@ final class BrowserViewModel {
         }
         for id in added {
             guard parent == currentParentID else { return }
-            if let node = try? await Task.detached(priority: .userInitiated, operation: {
+            if let rawNode = try? await Task.detached(priority: .userInitiated, operation: {
                    try await transport.metadata(for: id)
                }).value,
-               !entries.contains(where: { $0.id == node.id }) {
+               !entries.contains(where: { $0.id == rawNode.id }) {
+                let node = locatedNode(rawNode, parentID: parent, storageID: storageID)
                 entries.append(node)
                 addToCachedListing(node)
             }
@@ -425,18 +492,16 @@ final class BrowserViewModel {
 
     private func apply(_ change: DeviceChange) {
         switch change {
-        case .added(let node):
+        case .added(let rawNode):
+            let node = protectedNode(for: rawNode)
             scheduleStorageRefresh()   // free space dropped
             if node.storageID == storageID {
-                addToCachedListing(node)
+                addToCachedListing(node, removingExisting: recentlyAddedNodes[node.id] != nil)
             }
             guard node.storageID == storageID, node.parentID == currentParentID else { return }
-            recentlyAddedIDs[node.id] = Date()   // shield from poll-removal during indexing lag
-            if !entries.contains(where: { $0.id == node.id }) {
-                entries.append(node)
-                entries.sort(by: Self.order)
-                cacheCurrentListing()
-            }
+            rememberRecentlyAdded(node)   // shield from poll/reload removal during indexing lag
+            upsertCurrentEntry(node)
+            cacheCurrentListing()
         case .removed(let id):
             scheduleStorageRefresh()   // free space recovered
             let wasInCurrentListing = entries.contains { $0.id == id }

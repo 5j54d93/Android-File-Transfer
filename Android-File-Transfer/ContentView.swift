@@ -125,6 +125,9 @@ struct ContentView: View {
         browser.alerts = alerts
         browser.isTransferActive = { transfers.activeCount > 0 }
         transfers.alerts = alerts
+        transfers.onUploadCompleted = { [weak browser] node in
+            browser?.recordCompletedUpload(node)
+        }
         // When the browser detects free space changed, refresh the sidebar's figures too.
         browser.onStorageShouldRefresh = { Task { await deviceManager.refreshStorages() } }
         // A lost USB connection offers a "Reconnect" action: reset + re-discover the device,

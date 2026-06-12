@@ -65,6 +65,7 @@ final class TransferManager {
     private(set) var items: [Item] = []
     private(set) var transport: (any DeviceTransport)?
     @ObservationIgnored var alerts: AppAlerts?
+    @ObservationIgnored var onUploadCompleted: (@MainActor (FileNode) -> Void)?
 
     private var queue: [Item] = []
     private var isRunning = false
@@ -225,10 +226,20 @@ final class TransferManager {
                     try await transport.download(node.id, to: destination, progress: onProgress)
                 })
             case .upload(let localURL, let parentID, let storageID):
-                try await awaitForwardingCancellation(Task.detached(priority: .userInitiated) {
+                let uploaded = try await awaitForwardingCancellation(Task.detached(priority: .userInitiated) {
                     try await transport.upload(localURL: localURL, as: localURL.lastPathComponent,
                                                toParent: parentID, in: storageID, progress: onProgress)
                 })
+                let ext = localURL.pathExtension.isEmpty ? nil : localURL.pathExtension.lowercased()
+                let displayNode = FileNode(id: uploaded.id,
+                                           storageID: storageID,
+                                           parentID: parentID,
+                                           name: uploaded.name.isEmpty ? localURL.lastPathComponent : uploaded.name,
+                                           isDirectory: false,
+                                           size: uploaded.size > 0 ? uploaded.size : item.totalBytes,
+                                           modifiedDate: uploaded.modifiedDate,
+                                           fileExtension: uploaded.fileExtension ?? ext)
+                onUploadCompleted?(displayNode)
             }
             item.status = .completed
             item.bytesPerSecond = 0
