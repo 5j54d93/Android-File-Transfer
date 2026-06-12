@@ -38,7 +38,7 @@ Drag files from Finder onto the window to upload, and drag files out to Finder t
 - **Full-window progress**：a transfer dims the entire window — toolbar included — behind a centered card with phase steps（Prepare ▸ Transfer ▸ Complete）, the current file and destination, overall progress, speed, and ETA. The final phase reads "Waiting for phone to confirm", so a finishing upload never looks stuck, and the card clears itself the moment everything is done — failures stay on screen with **Retry All**.
 - **Large files**：handles files larger than 4 GB in both directions.
 
-<img src="https://github.com/5j54d93/Android-File-Transfer/blob/main/.github/Assets/transfer.gif" width='100%' height='100%'/>
+<img src="https://github.com/5j54d93/Android-File-Transfer/blob/main/.github/Assets/transfer.png" width='100%' height='100%'/>
 
 ## Connect over Wi-Fi
 
