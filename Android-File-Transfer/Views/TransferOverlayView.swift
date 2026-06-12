@@ -97,18 +97,17 @@ struct TransferOverlayView: View {
             VStack(spacing: 0) {
                 // Keep the count/speed/ETA close to the progress bar; hide only during the
                 // brief successful fade-out when the batch has already cleared.
-                if shouldShowTransferStats {
+                if shouldShowTransferStats, let item = transfers.currentItem {
                     HStack {
-                        Text(sizeText)
-                            .contentTransition(.numericText())
+                        transferSizeStats(for: item)
                         Spacer(minLength: 8)
                         if !detailText.isEmpty {
-                            Text(detailText)
-                                .contentTransition(.numericText(countsDown: true))
+                            transferDetailStats(for: item)
                         }
                     }
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
+                    .animation(.easeInOut(duration: 0.2), value: sizeText)
                     .animation(.easeInOut(duration: 0.2), value: detailText)
                     .padding(.bottom, 2)
                 }
@@ -223,6 +222,36 @@ struct TransferOverlayView: View {
         transfers.batchTotal > 0
     }
 
+    private func transferSizeStats(for item: TransferManager.Item) -> some View {
+        HStack(spacing: 0) {
+            NumericStatText(Format.size(item.completedBytes))
+            Text(" / ")
+            NumericStatText(Format.size(item.totalBytes))
+        }
+    }
+
+    @ViewBuilder
+    private func transferDetailStats(for item: TransferManager.Item) -> some View {
+        switch currentPhase {
+        case .finalizing:
+            Text(detailText)
+        case .preparing:
+            EmptyView()
+        case .transferring:
+            HStack(spacing: 0) {
+                if let speed = Format.speed(item.bytesPerSecond) {
+                    NumericStatText(speed)
+                }
+                if let eta = Format.eta(item.etaSeconds) {
+                    if Format.speed(item.bytesPerSecond) != nil {
+                        Text("・")
+                    }
+                    NumericStatText(eta, countsDown: true)
+                }
+            }
+        }
+    }
+
     private var transferTitleText: String {
         switch currentPhase {
         case .preparing:
@@ -313,6 +342,49 @@ struct TransferOverlayView: View {
                     .buttonStyle(.borderedProminent)
             }
         }
+    }
+}
+
+private struct NumericStatText: View {
+    let text: String
+    var countsDown = false
+
+    init(_ text: String, countsDown: Bool = false) {
+        self.text = text
+        self.countsDown = countsDown
+    }
+
+    var body: some View {
+        let parts = splitFirstNumber(in: text)
+        HStack(spacing: 0) {
+            if !parts.prefix.isEmpty {
+                Text(parts.prefix)
+            }
+            if !parts.number.isEmpty {
+                Text(parts.number)
+                    .contentTransition(.numericText(countsDown: countsDown))
+            }
+            if !parts.suffix.isEmpty {
+                Text(parts.suffix)
+            }
+        }
+    }
+
+    private func splitFirstNumber(in text: String) -> (prefix: String, number: String, suffix: String) {
+        guard let start = text.firstIndex(where: { $0.wholeNumberValue != nil }) else {
+            return (text, "", "")
+        }
+
+        var end = start
+        while end < text.endIndex, isNumberBody(text[end]) {
+            text.formIndex(after: &end)
+        }
+
+        return (String(text[..<start]), String(text[start..<end]), String(text[end...]))
+    }
+
+    private func isNumberBody(_ character: Character) -> Bool {
+        character.wholeNumberValue != nil || ".,٫٬，．".contains(character)
     }
 }
 
