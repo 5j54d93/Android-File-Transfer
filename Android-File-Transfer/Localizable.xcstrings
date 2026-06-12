@@ -20,9 +20,6 @@
         }
       }
     },
-    "%@ " : {
-
-    },
     "%@ File" : {
       "localizations" : {
         "en" : {
@@ -51,16 +48,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 可用，共 %@"
-          }
-        }
-      }
-    },
-    "%@%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@%2$@"
           }
         }
       }
@@ -1140,22 +1127,6 @@
         }
       }
     },
-    "When on, the current folder is checked every few seconds, so files added or removed on the phone show up automatically. A shorter interval keeps the list fresher, but the check shares the USB connection with file transfers and may occasionally delay the start of a transfer for a moment. When off, changes reported by the phone still appear, and you can always refresh manually from the toolbar." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When on, the current folder is checked every few seconds, so files added or removed on the phone show up automatically. A shorter interval keeps the list fresher, but the check shares the USB connection with file transfers and may occasionally delay the start of a transfer for a moment. When off, changes reported by the phone still appear, and you can always refresh manually from the toolbar."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開啟後，每隔幾秒會檢查一次目前資料夾，手機端新增或移除的檔案就會自動出現在列表中。間隔越短，列表越即時，但這項檢查與檔案傳輸共用同一條 USB 連線，偶爾可能讓傳輸晚一點才開始；間隔越長則越省資源。關閉後，手機主動回報的變動仍會顯示，也隨時可以從工具列手動重新整理。"
-          }
-        }
-      }
-    },
     "Reconnect" : {
       "localizations" : {
         "en" : {
@@ -1296,23 +1267,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "掃描 QR code"
-          }
-        }
-      }
-    },
-    "Scanning…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scanning…"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "掃描中…"
           }
         }
       }
@@ -1655,7 +1609,20 @@
       }
     },
     "When on, the current folder is checked every few seconds, so files added or removed on the phone show up automatically. A shorter interval keeps the list fresher, but the check shares the USB connection with file transfers and may occasionally delay the start of a transfer for a moment. When off, changes reported by the phone still appear, and you can always refresh manually from the toolbar." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When on, the current folder is checked every few seconds, so files added or removed on the phone show up automatically. A shorter interval keeps the list fresher, but the check shares the USB connection with file transfers and may occasionally delay the start of a transfer for a moment. When off, changes reported by the phone still appear, and you can always refresh manually from the toolbar."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟後，每隔幾秒會檢查一次目前資料夾，手機端新增或移除的檔案就會自動出現在列表中。間隔越短，列表越即時，但這項檢查與檔案傳輸共用同一條 USB 連線，偶爾可能讓傳輸晚一點才開始；間隔越長則越省資源。關閉後，手機主動回報的變動仍會顯示，也隨時可以從工具列手動重新整理。"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

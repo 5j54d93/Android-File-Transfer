@@ -225,7 +225,7 @@ struct TransferOverlayView: View {
     private func transferSizeStats(for item: TransferManager.Item) -> some View {
         HStack(spacing: 0) {
             NumericStatText(Format.size(item.completedBytes))
-            Text(" / ")
+            Text(verbatim: " / ")
             NumericStatText(Format.size(item.totalBytes))
         }
     }
@@ -244,7 +244,7 @@ struct TransferOverlayView: View {
                 }
                 if let eta = Format.eta(item.etaSeconds) {
                     if Format.speed(item.bytesPerSecond) != nil {
-                        Text("・")
+                        Text(verbatim: "・")
                     }
                     NumericStatText(eta, countsDown: true)
                 }
