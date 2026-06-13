@@ -141,13 +141,12 @@ struct ContentView: View {
     /// passes are far too quick to indicate live, so the dot doesn't try.) `modeFade` dips the
     /// whole line and fades it back in when the setting is toggled.
     private var refreshStatusSubtitle: Text {
-        // circlebadge.fill is SF's inline status dot: small within the glyph box and vertically
-        // centred against text — unlike shrinking circle.fill, which sits low on the baseline.
-        let dot = Text(Image(systemName: "circlebadge.fill")) + Text(verbatim: " ")
-        let coloredDot: Text = dot.foregroundColor((autoRefreshEnabled ? Color.green : Color.red).opacity(modeFade))
+        let coloredDot = Text(Image(systemName: "circlebadge.fill"))
+            .foregroundColor((autoRefreshEnabled ? Color.green : Color.red).opacity(modeFade))
         let labelKey: LocalizedStringKey = autoRefreshEnabled ? "Auto Refresh" : "Auto Refresh Off"
-        let label: Text = Text(labelKey).foregroundColor(Color.primary.opacity(0.55 * modeFade))
-        return coloredDot + label
+        let label = Text(labelKey)
+            .foregroundColor(Color.primary.opacity(0.55 * modeFade))
+        return Text("\(coloredDot) \(label)")
     }
 
     /// Toggling auto-refresh in Settings: the new colour/label fades in instead of snapping.

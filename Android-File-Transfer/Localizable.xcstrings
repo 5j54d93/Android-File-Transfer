@@ -4,6 +4,9 @@
     "" : {
       "shouldTranslate" : false
     },
+    "%@ %@" : {
+      "shouldTranslate" : false
+    },
     "\"%@\" is using the USB connection to the device, so the phone can't be reached. Quit it, then rescan." : {
       "localizations" : {
         "en" : {
