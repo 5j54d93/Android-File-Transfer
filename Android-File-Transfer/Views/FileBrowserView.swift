@@ -31,8 +31,9 @@ struct FileBrowserView: View {
         .toolbar { toolbarContent }
         // Drag files from Finder anywhere onto the window to upload them to the current folder.
         .dropDestination(for: URL.self) { urls, _ in
-            handleDrop(urls)
-            return !urls.isEmpty
+            let acceptsDrop = !transfers.isPresenting && urls.contains { !$0.hasDirectoryPath }
+            if acceptsDrop { handleDrop(urls) }
+            return acceptsDrop
         } isTargeted: { isDropTargeted = $0 }
         .sheet(isPresented: $newFolderPresented) {
             NameSheet(title: "New Folder", label: "Name", text: $newFolderName, confirmTitle: "Create") {
@@ -252,10 +253,15 @@ struct FileBrowserView: View {
     }
 
     private func handleDrop(_ urls: [URL]) {
-        guard let transport = browser.transport, let storageID = browser.storageID else { return }
-        for url in urls where !url.hasDirectoryPath {
-            transfers.upload(url, toParent: browser.currentParentID, storage: storageID,
-                             destinationFolder: destinationFolderLabel, via: transport)
+        let files = urls.filter { !$0.hasDirectoryPath }
+        guard !files.isEmpty, !transfers.isPresenting else { return }
+        let destinationFolder = destinationFolderLabel
+        Task {
+            guard let destination = await browser.prepareUploadDestination() else { return }
+            for url in files {
+                transfers.upload(url, toParent: destination.parentID, storage: destination.storageID,
+                                 destinationFolder: destinationFolder, via: destination.transport)
+            }
         }
     }
 

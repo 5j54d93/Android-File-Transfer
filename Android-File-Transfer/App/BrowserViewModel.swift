@@ -14,6 +14,12 @@ import MTPKit
 @MainActor
 @Observable
 final class BrowserViewModel {
+    struct UploadDestination {
+        let transport: any DeviceTransport
+        let parentID: String?
+        let storageID: String
+    }
+
     private(set) var transport: (any DeviceTransport)?
     private(set) var storage: StorageInfo?
     /// Directories from the storage root down to the current folder. Empty == root.
@@ -310,6 +316,45 @@ final class BrowserViewModel {
         guard node.parentID == currentParentID else { return }
         upsertCurrentEntry(node)
         cacheCurrentListing()
+    }
+
+    func prepareUploadDestination() async -> UploadDestination? {
+        guard let transport, let storageID else { return nil }
+        let parent = currentParentID
+        let key = cacheKey(parent, in: storageID)
+        isReloading = true
+        errorMessage = nil
+        defer { isReloading = false }
+
+        do {
+            // Before upload, trust the device's actual folder listing over our cache. This avoids
+            // sending SendObjectInfo to a stale parent/name after the phone deleted something but
+            // did not emit an event.
+            let listed = try await Task.detached(priority: .userInitiated) {
+                try await transport.listChildren(of: parent, in: storageID)
+            }.value
+            guard parent == currentParentID, storageID == self.storageID else { return nil }
+
+            let sorted = listed.sorted(by: Self.order)
+            let liveIDs = Set(sorted.map(\.id))
+            let removed = Set(entries.map(\.id)).subtracting(liveIDs)
+            for id in removed {
+                selection.remove(id)
+                removeFromCachedListings(id: id)
+            }
+            entries = sorted
+            listingCache[key] = sorted
+            return UploadDestination(transport: transport, parentID: parent, storageID: storageID)
+        } catch {
+            errorMessage = error.friendlyMessage
+            if error.isMTPConnectionLost, let onConnectionLost {
+                alerts?.error(NSLocalizedString("The connection to the device was lost. Make sure File Transfer is on, then reconnect.", comment: ""),
+                              actionTitle: NSLocalizedString("Reconnect", comment: "")) { onConnectionLost() }
+            } else {
+                alerts?.error(String(format: NSLocalizedString("Failed to read folder: %@", comment: ""), error.friendlyMessage))
+            }
+            return nil
+        }
     }
 
     func reload() async {
