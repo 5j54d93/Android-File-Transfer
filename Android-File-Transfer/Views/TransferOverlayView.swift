@@ -14,6 +14,7 @@ import SwiftUI
 struct TransferOverlayView: View {
     @Bindable var transfers: TransferManager
     @Environment(\.colorScheme) private var colorScheme
+    @State private var lastVisibleItem: TransferManager.Item?
 
     var body: some View {
         ZStack {
@@ -46,6 +47,11 @@ struct TransferOverlayView: View {
                 // where the card and window backgrounds are nearly the same colour.
                 .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.separator, lineWidth: 1))
         }
+        .onChange(of: transfers.currentItem?.id, initial: true) { _, _ in
+            if let item = transfers.currentItem {
+                lastVisibleItem = item
+            }
+        }
     }
 
     @ViewBuilder
@@ -72,7 +78,7 @@ struct TransferOverlayView: View {
                 .padding(18)
 
             VStack(spacing: 4) {
-                if let name = transfers.currentItem?.name {
+                if let name = displayItem?.name {
                     Text(name)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -96,8 +102,8 @@ struct TransferOverlayView: View {
 
             VStack(spacing: 0) {
                 // Keep the count/speed/ETA close to the progress bar; hide only during the
-                // brief successful fade-out when the batch has already cleared.
-                if shouldShowTransferStats, let item = transfers.currentItem {
+                // brief successful fade-out when there is no transfer item left to display.
+                if shouldShowTransferStats, let item = displayItem {
                     HStack {
                         transferSizeStats(for: item)
                         Spacer(minLength: 8)
@@ -134,9 +140,12 @@ struct TransferOverlayView: View {
     private enum Phase: Int { case preparing = 0, transferring = 1, finalizing = 2 }
     private enum StepState { case done, current, pending }
 
-    /// Which phase the current item is in, derived purely from its byte counts.
+    /// Which phase the visible item is in. During the brief successful fade-out, the manager has
+    /// already marked the item completed, so `currentItem` is nil; keep the final step highlighted
+    /// instead of falling back to Prepare for one last render.
     private var currentPhase: Phase {
-        guard let item = transfers.currentItem else { return .preparing }
+        guard let item = displayItem else { return .preparing }
+        if isSuccessfulFadeOut { return .finalizing }
         if item.totalBytes > 0, item.completedBytes >= item.totalBytes { return .finalizing }
         if item.completedBytes > 0 { return .transferring }
         return .preparing
@@ -150,7 +159,7 @@ struct TransferOverlayView: View {
     }
 
     private var directionArrowIcon: String {
-        transfers.currentItem?.direction == .download ? "arrow.down" : "arrow.up"
+        displayItem?.direction == .download ? "arrow.down" : "arrow.up"
     }
 
     private var stepBar: some View {
@@ -214,7 +223,7 @@ struct TransferOverlayView: View {
     }
 
     private var destinationFolderText: String? {
-        let text = transfers.currentItem?.destinationFolder?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = displayItem?.destinationFolder?.trimmingCharacters(in: .whitespacesAndNewlines)
         return text?.isEmpty == false ? text : nil
     }
 
@@ -272,7 +281,7 @@ struct TransferOverlayView: View {
 
     /// Current file's byte progress, e.g. "1.1 GB / 2.8 GB".
     private var sizeText: String {
-        guard let item = transfers.currentItem, item.totalBytes > 0 else { return "" }
+        guard let item = displayItem, item.totalBytes > 0 else { return "" }
         return "\(Format.size(item.completedBytes)) / \(Format.size(item.totalBytes))"
     }
 
@@ -281,7 +290,7 @@ struct TransferOverlayView: View {
     /// *why* the bar is parked at 100% — the device is committing the file and we're awaiting its
     /// confirmation (for uploads, explicitly "waiting for phone").
     private var detailText: String {
-        guard let item = transfers.currentItem else { return "" }
+        guard let item = displayItem, item.status == .running else { return "" }
         switch currentPhase {
         case .finalizing:
             return item.direction == .upload
@@ -294,6 +303,23 @@ struct TransferOverlayView: View {
                 .compactMap { $0 }
                 .joined(separator: "・")
         }
+    }
+
+    private var displayItem: TransferManager.Item? {
+        if let item = transfers.currentItem {
+            return item
+        }
+        if isSuccessfulFadeOut {
+            return lastVisibleItem ?? transfers.items.first { $0.status == .completed }
+        }
+        return nil
+    }
+
+    private var isSuccessfulFadeOut: Bool {
+        transfers.activeCount == 0
+            && !transfers.hasFailures
+            && transfers.batchTotal > 0
+            && transfers.batchCompleted == transfers.batchTotal
     }
 
     // MARK: Failure
